@@ -405,7 +405,7 @@ class Export extends Gateway {
     {
         //删除当前目录下的同名文件
         $filename = $this->fileName;
-        $pathName = app()->basePath().DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."export".DIRECTORY_SEPARATOR.date('Ymd').DIRECTORY_SEPARATOR;
+        $pathName = dirname( dirname(dirname(dirname(dirname(__FILE__))))).DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."export".DIRECTORY_SEPARATOR.date('Ymd').DIRECTORY_SEPARATOR;
         File::mkdir($pathName);
         $objWrite = IOFactory::createWriter($this->spreadSheet, 'Xlsx');
         $objWrite->save($pathName.$filename);

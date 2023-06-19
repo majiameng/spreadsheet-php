@@ -2,7 +2,7 @@
     "name": "tinymeng/spreadsheet",
     "description": "Integrate third-party logins",
     "keywords": [
-        "tinymeng", "tools","php-tools","php"
+        "spreadsheet", "excel","php-spreadsheet","php"
     ],
     "license": "MIT",
     "authors": [
