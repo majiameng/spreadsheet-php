@@ -2,7 +2,7 @@
 
 欢迎 Star，欢迎 PR！
 
-> 大家如果有问题要交流，就发在这里吧： [Spreadsheet](https://github.com/majiameng/spreadsheet/issues/1) 交流 或发邮件 666@majiameng.com
+> 大家如果有问题要交流，就发在这里吧： [Spreadsheet](https://github.com/majiameng/spreadsheet-php/issues/1) 交流 或发邮件 666@majiameng.com
 
 
 # PHP Spreadsheet Class
@@ -16,6 +16,9 @@
 * 2.2 excel导入
 
 #### 2.1.excel导出
+
+> example 事例目录
+
 
 ```php
 <?php
@@ -142,4 +145,4 @@ array(3) {
 }
 ```
 
-> 大家如果有问题要交流，就发在这里吧： [Spreadsheet](https://github.com/majiameng/spreadsheet/issues/1) 交流 或发邮件 666@majiameng.com
+> 大家如果有问题要交流，就发在这里吧： [Spreadsheet](https://github.com/majiameng/spreadsheet-php/issues/1) 交流 或发邮件 666@majiameng.com
