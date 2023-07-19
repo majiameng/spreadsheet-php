@@ -6,7 +6,7 @@
 
 
 # PHP Spreadsheet Class
-
+基于 `phpoffice/phpspreadsheet` 扩展快速封装使用，避免我们再重复性的造轮子
 
 ## 1.安装
 > composer require tinymeng/spreadsheet  -vvv
