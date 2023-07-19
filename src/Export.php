@@ -88,12 +88,22 @@ class Export extends Gateway {
      * 自动筛选(是否开启)
      * @var bool
      */
-    public $autoFilter = true;
+    public $autoFilter = false;
     /**
-     * 冻结窗格（要冻结的首行首列，false不开启）
+     * 是否居中
      * @var string
      */
-    public $freezePane = "B2";
+    public $horizontal_center = true;
+    /**
+     * 自动适应文本类型
+     * @var bool
+     */
+    public $autoDataType = true;
+    /**
+     * 冻结窗格（要冻结的首行首列"B2"，false不开启）
+     * @var string|bool
+     */
+    public $freezePane = false;
 
     /**
      * 文件信息
@@ -132,9 +142,11 @@ class Export extends Gateway {
         /** 实例化定义默认excel **/
         $this->spreadSheet = new Spreadsheet();
         $this->spreadSheet->getProperties()->setCreator("TinyMeng")->setLastModifiedBy("TinyMeng");
-        $this->spreadSheet->getDefaultStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); //默认水平居中
-        $this->spreadSheet->getDefaultStyle()->getAlignment()->setVertical(Alignment::VERTICAL_CENTER); //默认垂直居中
-        $this->spreadSheet->getDefaultStyle()->getAlignment()->setHorizontal(Alignment::VERTICAL_CENTER); //默认垂直居中
+        if($this->horizontal_center){
+            $this->spreadSheet->getDefaultStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); //默认水平居中
+            $this->spreadSheet->getDefaultStyle()->getAlignment()->setVertical(Alignment::VERTICAL_CENTER); //默认垂直居中
+            $this->spreadSheet->getDefaultStyle()->getAlignment()->setHorizontal(Alignment::VERTICAL_CENTER); //默认垂直居中
+        }
 
         $this->workSheet = $this->spreadSheet->getActiveSheet();
         if(!empty($this->freezePane)) $this->workSheet->freezePane($this->freezePane); //冻结窗格
@@ -157,12 +169,12 @@ class Export extends Gateway {
             }
         }
         /** 查询结果赋值 **/
-       if(!empty($this->data)){
-           $this->excelSetValue();
-       }
-        $this->spreadSheet->getActiveSheet()->setAutoFilter(
-            $this->spreadSheet->getActiveSheet()->calculateWorksheetDimension()
-        );
+        if(!empty($this->data)){
+            $this->excelSetValue();
+        }
+            $this->spreadSheet->getActiveSheet()->setAutoFilter(
+                $this->spreadSheet->getActiveSheet()->calculateWorksheetDimension()
+            );
 
         //文件存储
         if(empty($this->fileName)){
@@ -298,7 +310,15 @@ class Export extends Gateway {
 
             $rowName = $this->cellName($_lie);
 //            $this->workSheet->setCellValue($rowName.$this->_row, $content);
-            $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+            if($this->autoDataType){
+                if (is_numeric($content) && strlen($content)<15){
+                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
+                }else{
+                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+                }
+            }else{
+                $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+            }
             $_lie ++;
         }
         $this->workSheet->getRowDimension($this->_row)->setRowHeight($this->height);
