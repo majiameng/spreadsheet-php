@@ -71,9 +71,9 @@ class Import extends Gateway {
         $this->spreadSheet->setActiveSheetIndex($this->sheet);
         $this->workSheet = $this->spreadSheet->getActiveSheet();
         //获取表格行数
-        $this->rowCount = $this->workSheet->getHighestRow();
+        $this->rowCount = $this->workSheet->getHighestDataRow();
         //获取表格列数
-        $this->columnCount = $this->workSheet->getHighestColumn();
+        $this->columnCount = $this->workSheet->getHighestDataColumn();
     }
 
     public function setTitle($title){
