@@ -8,7 +8,6 @@
  */
 namespace tinymeng\spreadsheet;
 
-use App\Services\CommonReturn;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -16,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Writer\Exception as ExceptionAlias;
 use tinymeng\spreadsheet\Connector\Gateway;
 use tinymeng\tools\exception\StatusCode;
+use tinymeng\tools\exception\TinymengException;
 use tinymeng\tools\File;
 
 class Export extends Gateway {
@@ -217,7 +217,9 @@ class Export extends Gateway {
                 $this->data = $this->arrayCount($data);
                 $this->excelGroupLeft($this->data, 0, $group_left_count);
             }else{
-                CommonReturn::fail(StatusCode::COMMON_PARAMS_VERIFY_ERROR, '左侧分组过多，导出失败！');
+                throw new TinymengException(StatusCode::COMMON_PARAM_INVALID,
+                    '左侧分组过多，导出失败！'
+                );
             }
         }
     }
