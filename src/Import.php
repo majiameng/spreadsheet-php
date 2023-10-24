@@ -65,14 +65,18 @@ class Import extends Gateway {
     private $cellName = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
 
     /**
+     * 文件中图片读取
+     * 图片存储的相对路径
      * @var string
      */
-    protected $relative_path = '/images';
+    public $relative_path = '/images';
 
     /**
+     * 文件中图片读取
+     * 图片存储的绝对路径
      * @var string
      */
-    protected $image_path;
+    public $image_path = '/images';
 
     /**
      * initReadExcel
@@ -131,11 +135,13 @@ class Import extends Gateway {
          */
         foreach ($this->workSheet->getDrawingCollection() as $drawing) {
             /**@var $drawing Drawing* */
-            list($startColumn, $startRow) = Coordinate::coordinateFromString($drawing->getCoordinates());
+            list($column, $startRow) = Coordinate::coordinateFromString($drawing->getCoordinates());
             $image_filename = "/{$this->sheet}-" . $drawing->getCoordinates();
             $image_suffix = $this->saveImage($drawing, $image_filename);
             $image_name = ltrim($this->relative_path, '/') . "{$image_filename}.{$image_suffix}";
-            $result[$startRow - 1][$fields[$startColumn]] = $image_name;
+            if(isset($fields[$column])) {
+                $result[$startRow - 1][$fields[$column]] = $image_name;
+            }
         }
         return $result;
     }
