@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use tinymeng\spreadsheet\Connector\Gateway;
+use tinymeng\tools\File;
 
 class Import extends Gateway {
 
@@ -194,6 +195,7 @@ class Import extends Gateway {
      */
     protected function saveImage(Drawing $drawing, $image_filename)
     {
+        File::mkdir($this->image_path);
         $image_filename .= '.' . $drawing->getExtension();
         switch ($drawing->getExtension()) {
             case 'jpg':
