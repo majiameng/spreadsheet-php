@@ -1,6 +1,6 @@
 {
     "name": "tinymeng/spreadsheet",
-    "description": "Integrate third-party logins",
+    "description": "php-spreadsheet Excel快速使用",
     "keywords": [
         "spreadsheet", "excel","php-spreadsheet","php"
     ],
