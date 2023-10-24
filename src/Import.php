@@ -8,7 +8,10 @@
  */
 namespace tinymeng\spreadsheet;
 
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use tinymeng\spreadsheet\Connector\Gateway;
 
 class Import extends Gateway {
@@ -55,7 +58,21 @@ class Import extends Gateway {
      * @var
      */
     public $fileName;
+
+    /**
+     * @var string[]
+     */
     private $cellName = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
+
+    /**
+     * @var string
+     */
+    protected $relative_path = '/images';
+
+    /**
+     * @var string
+     */
+    protected $image_path;
 
     /**
      * initReadExcel
@@ -71,9 +88,9 @@ class Import extends Gateway {
         $this->spreadSheet->setActiveSheetIndex($this->sheet);
         $this->workSheet = $this->spreadSheet->getActiveSheet();
         //获取表格行数
-        $this->rowCount = $this->workSheet->getHighestRow();
+        $this->rowCount = $this->workSheet->getHighestDataRow();
         //获取表格列数
-        $this->columnCount = $this->workSheet->getHighestColumn();
+        $this->columnCount = $this->workSheet->getHighestDataColumn();
     }
 
     public function setTitle($title){
@@ -98,13 +115,24 @@ class Import extends Gateway {
             //列数循环 , 列数是以A列开始
             $data = [];
             foreach ($cellName as $column){
-                $value = trim($this->workSheet->getCell($column.$row)->getValue());
+                $cell = $this->workSheet->getCell($column.$row);
+                $value = trim($cell->getValue());
                 if(isset($fields[$column])){
                     $data[$fields[$column]] = $value;
                     if(!empty($value)) $rowFlog = true;//有内容
                 }
             }
             if($rowFlog) $result[] = $data;
+        }
+
+        //读取表格图片数据
+        foreach ($this->workSheet->getDrawingCollection() as $drawing) {
+            /**@var $drawing Drawing* */
+            list($startColumn, $startRow) = Coordinate::coordinateFromString($drawing->getCoordinates());
+            $image_filename = "/{$this->sheet}-" . $drawing->getCoordinates();
+            $image_suffix = $this->saveImage($drawing, $image_filename);
+            $image_name = ltrim($this->relative_path, '/') . "{$image_filename}.{$image_suffix}";
+            $result[$startRow - 1][$fields[$startColumn]] = $image_name;
         }
         return $result;
     }
@@ -147,4 +175,36 @@ class Import extends Gateway {
         $this->title_fields = $title_fields;
         return $title_fields;
     }
+
+    /**
+     * 保存图片到文件相对路径
+     * @param Drawing $drawing
+     * @param $image_filename
+     * @return string
+     * @throws Exception
+     */
+    protected function saveImage(Drawing $drawing, $image_filename)
+    {
+        $image_filename .= '.' . $drawing->getExtension();
+        switch ($drawing->getExtension()) {
+            case 'jpg':
+            case 'jpeg':
+                $source = imagecreatefromjpeg($drawing->getPath());
+                imagejpeg($source, $this->image_path . $image_filename);
+                break;
+            case 'gif':
+                $source = imagecreatefromgif($drawing->getPath());
+                imagegif($source, $this->image_path . $image_filename);
+                break;
+            case 'png':
+                $source = imagecreatefrompng($drawing->getPath());
+                imagepng($source, $this->image_path . $image_filename);
+                break;
+            default:
+                throw new Exception('image format error!');
+        }
+
+        return $drawing->getExtension();
+    }
+
 }
