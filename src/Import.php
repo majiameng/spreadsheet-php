@@ -135,12 +135,12 @@ class Import extends Gateway {
          */
         foreach ($this->workSheet->getDrawingCollection() as $drawing) {
             /**@var $drawing Drawing* */
-            list($column, $startRow) = Coordinate::coordinateFromString($drawing->getCoordinates());
+            list($column, $row) = Coordinate::coordinateFromString($drawing->getCoordinates());
             $image_filename = "/{$this->sheet}-" . $drawing->getCoordinates();
             $image_suffix = $this->saveImage($drawing, $image_filename);
             $image_name = ltrim($this->relative_path, '/') . "{$image_filename}.{$image_suffix}";
             if(isset($fields[$column])) {
-                $result[$startRow - 1][$fields[$column]] = $image_name;
+                $result[$row-($this->titleFieldsRow+1)][$fields[$column]] = $image_name;
             }
         }
         return $result;
