@@ -134,10 +134,11 @@ class Import extends Gateway {
          * 读取表格图片数据
          * (如果为空右击图片转为浮动图片)
          */
+        $image_filename_prefix = time().rand(100,999).$this->sheet;
         foreach ($this->workSheet->getDrawingCollection() as $drawing) {
             /**@var $drawing Drawing* */
             list($column, $row) = Coordinate::coordinateFromString($drawing->getCoordinates());
-            $image_filename = "/{$this->sheet}-" . $drawing->getCoordinates();
+            $image_filename = "/{$image_filename_prefix}-" . $drawing->getCoordinates();
             $image_suffix = $this->saveImage($drawing, $image_filename);
             $image_name = ltrim($this->relative_path, '/') . "{$image_filename}.{$image_suffix}";
             if(isset($fields[$column])) {
