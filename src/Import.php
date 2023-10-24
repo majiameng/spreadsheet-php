@@ -125,7 +125,10 @@ class Import extends Gateway {
             if($rowFlog) $result[] = $data;
         }
 
-        //读取表格图片数据
+        /*
+         * 读取表格图片数据
+         * (如果为空右击图片转为浮动图片)
+         */
         foreach ($this->workSheet->getDrawingCollection() as $drawing) {
             /**@var $drawing Drawing* */
             list($startColumn, $startRow) = Coordinate::coordinateFromString($drawing->getCoordinates());
