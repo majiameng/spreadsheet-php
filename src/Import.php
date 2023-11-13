@@ -63,7 +63,7 @@ class Import extends Gateway {
     /**
      * @var string[]
      */
-    private $cellName = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'AA', 'AB', 'AC', 'AD', 'AE', 'AF', 'AG', 'AH', 'AI', 'AJ', 'AK', 'AL', 'AM', 'AN', 'AO', 'AP', 'AQ', 'AR', 'AS', 'AT', 'AU', 'AV', 'AW', 'AX', 'AY', 'AZ'];
+    private $cellName = [];
 
     /**
      * 文件中图片读取
@@ -96,6 +96,8 @@ class Import extends Gateway {
         $this->rowCount = $this->workSheet->getHighestDataRow();
         //获取表格列数
         $this->columnCount = $this->workSheet->getHighestDataColumn();
+        //初始化所有列数组
+        $this->cellName = $this->getCellName($this->columnCount);
     }
 
     public function setTitle($title){

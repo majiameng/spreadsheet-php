@@ -31,7 +31,7 @@ abstract class Gateway implements GatewayInterface
     public $format_date = 'Y-m-d H:i:s';
 
     /**
-     * numToEn
+     * 数字转英文列
      * @param $columnIndex
      * @return string
      * @author: Tinymeng <666@majiameng.com>
@@ -68,5 +68,19 @@ abstract class Gateway implements GatewayInterface
             $v = ' '.$v;//长数字在excel中会变科学计数法
         }
         return $v;
+    }
+
+    /**
+     * 根据最后一列获取所有列数组
+     * @param $lastCell
+     * @return array
+     */
+    public function getCellName($lastCell){
+        $cellName = array();
+        for($i='A'; $i!=$lastCell; $i++) {
+            $cellName[] = $i;
+        }
+        $cellName[] = $i++;
+        return $cellName;
     }
 }

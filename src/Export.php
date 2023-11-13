@@ -110,6 +110,11 @@ class Export extends Gateway {
      * @var array
      */
     public $fileTitle=[];
+    /**
+     * 导出文件路径名称
+     * @var string
+     */
+    public $pathName;
 
     /**
      * 定义默认列数
@@ -427,11 +432,11 @@ class Export extends Gateway {
     {
         //删除当前目录下的同名文件
         $filename = $this->fileName;
-        $pathName = dirname( dirname(dirname(dirname(dirname(__FILE__))))).DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."export".DIRECTORY_SEPARATOR.date('Ymd').DIRECTORY_SEPARATOR;
-        File::mkdir($pathName);
+        if(empty($this->pathName)) $this->pathName = dirname( dirname(dirname(dirname(dirname(__FILE__))))).DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."export".DIRECTORY_SEPARATOR.date('Ymd').DIRECTORY_SEPARATOR;
+        File::mkdir($this->pathName);
         $objWrite = IOFactory::createWriter($this->spreadSheet, 'Xlsx');
-        $objWrite->save($pathName.$filename);
-        return $pathName.$filename;
+        $objWrite->save($this->pathName.$filename);
+        return $this->pathName.$filename;
     }
 
 }
