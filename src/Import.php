@@ -121,7 +121,7 @@ class Import extends Gateway {
             $data = [];
             foreach ($cellName as $column){
                 $cell = $this->workSheet->getCell($column.$row);
-                $value = trim($cell->getValue());
+                $value = trim($cell->getFormattedValue());
                 if(isset($fields[$column])){
                     $data[$fields[$column]] = $value;
                     if(!empty($value)) $rowFlog = true;//有内容
