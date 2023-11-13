@@ -114,14 +114,13 @@ class Import extends Gateway {
     public function getExcelData($fields){
         /* 循环读取每个单元格的数据 */
         $result = [];
-        $cellName = array_slice($this->cellName,0,count($this->title));
         $dataRow = $this->titleFieldsRow+1;
         //行数循环
         for ($row = $dataRow; $row <= $this->rowCount; $row++){
             $rowFlog = false;//行是否有内容（过滤空行）
             //列数循环 , 列数是以A列开始
             $data = [];
-            foreach ($cellName as $column){
+            foreach ($this->cellName as $column){
                 $cell = $this->workSheet->getCell($column.$row);
                 $value = trim($cell->getFormattedValue());
                 if(isset($fields[$column])){
@@ -171,9 +170,8 @@ class Import extends Gateway {
 
         $row = $this->titleFieldsRow;
         $titleDataArr = [];
-        $cellName = array_slice($this->cellName,0,count($title));
 
-        foreach ($cellName as $column){
+        foreach ($this->cellName as $column){
             $value = trim($this->workSheet->getCell($column.$row)->getValue());
             if(!empty($value)){
                 $titleDataArr[$value] = $column;
