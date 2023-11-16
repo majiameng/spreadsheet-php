@@ -74,6 +74,17 @@ class Export extends Gateway {
      */
     public $saveType = 'download';
     /**
+     * 定义表头行高
+     * @var int
+     */
+    public $titleHeight = 22;
+    /**
+     * 定义表头列宽(未设置则自动计算宽度)
+     * @var int
+     */
+    public $titleWidth = 20;
+
+    /**
      * 定义行高
      * @var int
      */
@@ -259,12 +270,12 @@ class Export extends Gateway {
                 $_cols = $this->_col;
                 foreach ($val as $k => $v) {
                     $this->workSheet->setCellValue($this->cellName($_cols) . ($this->_row+1), $k);
-                    if(empty($this->width)) {
-                        $this->workSheet->getColumnDimension($this->cellName($_cols))->setAutoSize($this->width); //自动计算宽度
+                    if(empty($this->titleWidth)) {
+                        $this->workSheet->getColumnDimension($this->cellName($_cols))->setAutoSize($this->titleWidth); //自动计算宽度
                     }else{
-                        $this->workSheet->getColumnDimension($this->cellName($_cols))->setWidth($this->width); //列宽度
+                        $this->workSheet->getColumnDimension($this->cellName($_cols))->setWidth($this->titleWidth); //列宽度
                     }
-                    $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->height);
+                    $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);
                     if ($num < count($val)) {
                         $this->_col++;
                         $num++;
@@ -277,16 +288,16 @@ class Export extends Gateway {
             } else {
                 if ($this->fileTitle['title_row'] != 1) {
                     $this->workSheet->mergeCells($rowName . $this->_row.':' . $rowName . ($this->_row + $this->fileTitle['title_row'] - 1));
-                    $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->height);
+                    $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);
                 }else{
-                    $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->height*2);
+                    $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight*2);
                 }
                 $this->workSheet->setCellValue($rowName . $this->_row, $key);//设置值
                 $this->workSheet->getStyle($rowName . $this->_row)->getAlignment()->setWrapText(true);//自动换行
-                if(empty($this->width)){
+                if(empty($this->titleWidth)){
                     $this->workSheet->getColumnDimension($rowName)->setAutoSize(true); //自动计算宽度
                 }else{
-                    $this->workSheet->getColumnDimension($rowName)->setWidth($this->width); //列宽度
+                    $this->workSheet->getColumnDimension($rowName)->setWidth($this->titleWidth); //列宽度
                 }
             }
             $this->_col++;
@@ -304,6 +315,7 @@ class Export extends Gateway {
     {
         $_lie = 0;
         foreach ($this->field as $v){
+            $rowName = $this->cellName($_lie);
             if(strpos($v,'.') !== false){
                 $v = explode('.',$v);
                 $content = $val;
@@ -313,18 +325,29 @@ class Export extends Gateway {
             }else{
                 $content = ($val[$v]??'');
             }
-            $content = $this->formatValue($content);//格式化数据
+            if(is_string($content)){
+                $content = $this->formatValue($content);//格式化数据
 
-            $rowName = $this->cellName($_lie);
-//            $this->workSheet->setCellValue($rowName.$this->_row, $content);
-            if($this->autoDataType){
-                if (is_numeric($content) && strlen($content)<15){
-                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
+                if($this->autoDataType){
+                    if (is_numeric($content) && strlen($content)<15){
+                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
+                    }else{
+                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+                    }
                 }else{
+                    //$this->workSheet->setCellValue($rowName.$this->_row, $content);
                     $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
                 }
-            }else{
-                $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+            }elseif(is_array($content) && isset($content['type']) && isset($content['content'])){
+                if($content['type'] == 'image'){
+                    $path = $this->verifyFile($content['content']);
+                    $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+                    $drawing->setPath($path);
+                    if(!empty($content['height'])) $drawing->setHeight($content['height']);
+                    if(!empty($content['width'])) $drawing->setWidth($content['width']);//只设置高，宽会自适应，如果设置宽后，高则失效
+                    $drawing->setCoordinates($rowName.$this->_row);
+                    $drawing->setWorksheet($this->workSheet);
+                }
             }
             $_lie ++;
         }

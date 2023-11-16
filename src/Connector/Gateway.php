@@ -1,6 +1,7 @@
 <?php
 namespace tinymeng\spreadsheet\Connector;
 
+use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -37,7 +38,7 @@ abstract class Gateway implements GatewayInterface
      * @author: Tinymeng <666@majiameng.com>
      * @time: 2022/4/24 17:35
      */
-    public function cellName($columnIndex){
+    protected function cellName($columnIndex){
         $columnIndex =(int)$columnIndex+1;
         static $indexCache = [];
 
@@ -60,7 +61,7 @@ abstract class Gateway implements GatewayInterface
      * @param string
      * @return mixed
      */
-    public function formatValue($v){
+    protected function formatValue($v){
         if($this->format === false) return $v;
         if(is_numeric($v) && strlen($v)===10){
             $v = date($this->format_date,$v);//时间戳转时间格式
@@ -75,12 +76,46 @@ abstract class Gateway implements GatewayInterface
      * @param $lastCell
      * @return array
      */
-    public function getCellName($lastCell){
+    protected function getCellName($lastCell){
         $cellName = array();
         for($i='A'; $i!=$lastCell; $i++) {
             $cellName[] = $i;
         }
         $cellName[] = $i++;
         return $cellName;
+    }
+
+    /**
+     * @param $url
+     * @param $path
+     * @return array|string|string[]
+     */
+    protected function verifyFile($path, $verifyFile = true, $zip = null){
+        if ($verifyFile && preg_match('~^data:image/[a-z]+;base64,~', $path) !== 1) {
+            // Check if a URL has been passed. https://stackoverflow.com/a/2058596/1252979
+            if (filter_var($path, FILTER_VALIDATE_URL)) {
+                $this->path = $path;
+                // Implicit that it is a URL, rather store info than running check above on value in other places.
+                $this->isUrl = true;
+                $imageContents = file_get_contents($path);
+                $filePath = tempnam(sys_get_temp_dir(), 'Drawing');
+                if ($filePath) {
+                    file_put_contents($filePath, $imageContents);
+                    if (file_exists($filePath)) {
+                        return $filePath;
+                    }
+                }
+            } elseif (file_exists($path)) {
+                return $path;
+            } elseif ($zip instanceof ZipArchive) {
+                $zipPath = explode('#', $path)[1];
+                if ($zip->locateName($zipPath) !== false) {
+                    return $path;
+                }
+            } else {
+                throw new PhpSpreadsheetException("File $path not found!");
+            }
+        }
+        return $path;
     }
 }

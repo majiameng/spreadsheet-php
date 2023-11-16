@@ -16,6 +16,7 @@ $title = [
     '用户id'=>'user_id',
     '结算日期'=>'day',
     '下单时间'=>'create_time',
+    '图片'=>'image',
 ];
 
 /**
@@ -28,12 +29,23 @@ $data = [
         'user_id'=>'1000',
         'day'=>'20220101',
         'create_time'=>'1687140376',
+        'image'=>[
+            'type'=>'image',
+            'content'=>'https://sns.bjwmsc.com/wp-content/themes/zibll/img/logo.png',//网络图片确保存在
+            'height'=>100,
+//            'width'=>100,//只设置高，宽会自适应，如果设置宽后，高则失效
+        ],
     ],[
         'id'=>'2',
         'order_sn'=>'20190101465464',
         'user_id'=>'1000',
         'day'=>'20220101',
         'create_time'=>'1687140376',
+        'image'=>[
+            'type'=>'image',
+            'content'=>'./text.png',//本地图片确保存在
+            'height'=>100,
+        ],
     ],[
         'id'=>'3',
         'order_sn'=>'20200101465464',
@@ -58,6 +70,7 @@ $export->fileTitle = $fileTitle;//表头
 $export->sheetName = $filename;//文件名
 $export->data = $data;//excel数据数组
 $export->freezePane = false;
+$export->height = 70;//默认是22，如果有图片适当调高些
 $export->saveType = 'save';//存储方式: download下载, save存储本地
 $path = $export->exportExcel();
 echo '生成excel路径：'.$path;
