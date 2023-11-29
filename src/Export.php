@@ -24,10 +24,7 @@ class Export extends Gateway {
      * @var
      */
     public $params;
-    /**
-     * @var
-     */
-    public $query;
+
     /**
      * sheet名称
      * @var
@@ -110,6 +107,7 @@ class Export extends Gateway {
      * @var bool
      */
     public $autoDataType = true;
+
     /**
      * 冻结窗格（要冻结的首行首列"B2"，false不开启）
      * @var string|bool
@@ -121,6 +119,7 @@ class Export extends Gateway {
      * @var array
      */
     public $fileTitle=[];
+
     /**
      * 导出文件路径名称
      * @var string
@@ -165,7 +164,7 @@ class Export extends Gateway {
         }
 
         $this->workSheet = $this->spreadSheet->getActiveSheet();
-        if(!empty($this->freezePane)) $this->workSheet->freezePane($this->freezePane); //冻结窗格
+        if($this->freezePane) $this->workSheet->freezePane($this->freezePane); //冻结窗格
         $this->workSheet->getDefaultRowDimension()->setRowHeight($this->height); //默认行高
         $this->workSheet->setTitle($this->sheetName);   //设置sheet名称
 
@@ -188,9 +187,12 @@ class Export extends Gateway {
         if(!empty($this->data)){
             $this->excelSetValue();
         }
+        /** 开启自动筛选 **/
+        if($this->autoFilter){
             $this->spreadSheet->getActiveSheet()->setAutoFilter(
                 $this->spreadSheet->getActiveSheet()->calculateWorksheetDimension()
             );
+        }
 
         //文件存储
         if(empty($this->fileName)){
@@ -325,20 +327,7 @@ class Export extends Gateway {
             }else{
                 $content = ($val[$v]??'');
             }
-            if(is_string($content)){
-                $content = $this->formatValue($content);//格式化数据
-
-                if($this->autoDataType){
-                    if (is_numeric($content) && strlen($content)<15){
-                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
-                    }else{
-                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
-                    }
-                }else{
-                    //$this->workSheet->setCellValue($rowName.$this->_row, $content);
-                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
-                }
-            }elseif(is_array($content) && isset($content['type']) && isset($content['content'])){
+            if(is_array($content) && isset($content['type']) && isset($content['content'])){
                 if($content['type'] == 'image'){
                     $path = $this->verifyFile($content['content']);
                     $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
@@ -348,6 +337,15 @@ class Export extends Gateway {
                     $drawing->setCoordinates($rowName.$this->_row);
                     $drawing->setWorksheet($this->workSheet);
                 }
+            }else if (is_numeric($content)){
+                if($this->autoDataType && strlen($content)<15){
+                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
+                }else{
+                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+                }
+            }else{
+                $content = $this->formatValue($content);//格式化数据
+                $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
             }
             $_lie ++;
         }
