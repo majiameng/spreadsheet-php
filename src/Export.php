@@ -337,15 +337,17 @@ class Export extends Gateway {
                     $drawing->setCoordinates($rowName.$this->_row);
                     $drawing->setWorksheet($this->workSheet);
                 }
-            }else if (is_numeric($content)){
-                if($this->autoDataType && strlen($content)<15){
-                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
+            }else {
+                $content = $this->formatValue($content);//格式化数据
+                if (is_numeric($content)){
+                    if($this->autoDataType && strlen($content)<15){
+                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
+                    }else{
+                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
+                    }
                 }else{
                     $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
                 }
-            }else{
-                $content = $this->formatValue($content);//格式化数据
-                $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
             }
             $_lie ++;
         }
