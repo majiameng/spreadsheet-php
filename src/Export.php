@@ -21,11 +21,6 @@ use tinymeng\tools\File;
 class Export extends Gateway {
 
     /**
-     * @var
-     */
-    public $params;
-
-    /**
      * sheet名称
      * @var
      */
@@ -45,16 +40,6 @@ class Export extends Gateway {
      * @var
      */
     public $data;
-    /**
-     * 开始时间
-     * @var
-     */
-    public $start_time;
-    /**
-     * 结束时间
-     * @var
-     */
-    public $end_time;
     /**
      * 报表名称(主标题)
      * @var
@@ -80,17 +65,11 @@ class Export extends Gateway {
      * @var int 常用：20
      */
     public $titleWidth = null;
-
     /**
-     * 定义行高
+     * 定义数据行高
      * @var int 常用：22
      */
     public $height = null;
-    /**
-     * 定义列宽(未设置则自动计算宽度)
-     * @var int 常用：20
-     */
-    public $width = null;
 
     /**
      * 自动筛选(是否开启)
@@ -165,9 +144,6 @@ class Export extends Gateway {
 
         $this->workSheet = $this->spreadSheet->getActiveSheet();
         if($this->freezePane) $this->workSheet->freezePane($this->freezePane); //冻结窗格
-        if(!empty($this->height)){
-            $this->workSheet->getDefaultRowDimension()->setRowHeight($this->height); //默认行高
-        }
         $this->workSheet->setTitle($this->sheetName);   //设置sheet名称
 
         /** 设置表头 **/
@@ -268,7 +244,11 @@ class Export extends Gateway {
 
         $_merge = $this->cellName($this->_col);
         foreach ($this->fileTitle['title'] as $key => $val) {
+            if(!empty($this->titleHeight)) {
+                $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);//行高度
+            }
             $rowName = $this->cellName($this->_col);
+            $this->workSheet->getStyle($rowName . $this->_row)->getAlignment()->setWrapText(true);//自动换行
             if (is_array($val)) {
                 $num = 1;
                 $_cols = $this->_col;
@@ -279,9 +259,6 @@ class Export extends Gateway {
                     }else{
                         $this->workSheet->getColumnDimension($this->cellName($_cols))->setAutoSize(true); //自动计算宽度
                     }
-                    if(!empty($this->titleHeight)) {
-                        $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);//行高度
-                    }
                     if ($num < count($val)) {
                         $this->_col++;
                         $num++;
@@ -290,20 +267,11 @@ class Export extends Gateway {
                 }
                 $this->workSheet->mergeCells($_merge . $this->_row.':' . $this->cellName($this->_col) .$this->_row);
                 $this->workSheet->setCellValue($_merge . $this->_row, $key);//设置值
-                $this->workSheet->getStyle($rowName . $this->_row)->getAlignment()->setWrapText(true);//自动换行
             } else {
                 if ($this->fileTitle['title_row'] != 1) {
                     $this->workSheet->mergeCells($rowName . $this->_row.':' . $rowName . ($this->_row + $this->fileTitle['title_row'] - 1));
-                    if(!empty($this->titleHeight)) {
-                        $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);//行高度
-                    }
-                }else{
-                    if(!empty($this->titleHeight)) {
-                        $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight*2);//行高度
-                    }
                 }
                 $this->workSheet->setCellValue($rowName . $this->_row, $key);//设置值
-                $this->workSheet->getStyle($rowName . $this->_row)->getAlignment()->setWrapText(true);//自动换行
                 if(!empty($this->titleWidth)){
                     $this->workSheet->getColumnDimension($rowName)->setWidth($this->titleWidth); //列宽度
                 }else{
@@ -323,6 +291,10 @@ class Export extends Gateway {
      */
     private function excelSetCellValue($val)
     {
+        //设置单元格行高
+        if(!empty($this->height)){
+            $this->workSheet->getRowDimension($this->_row)->setRowHeight($this->height);
+        }
         $_lie = 0;
         foreach ($this->field as $v){
             $rowName = $this->cellName($_lie);
@@ -362,9 +334,6 @@ class Export extends Gateway {
                 }
             }
             $_lie ++;
-        }
-        if(!empty($this->height)){
-            $this->workSheet->getRowDimension($this->_row)->setRowHeight($this->height);
         }
         $this->_row ++;
     }

@@ -32,6 +32,11 @@ abstract class Gateway implements GatewayInterface
     public $format_date = 'Y-m-d H:i:s';
 
     /**
+     * @var
+     */
+    public $params;
+
+    /**
      * 数字转英文列
      * @param $columnIndex
      * @return string
