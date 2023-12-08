@@ -65,8 +65,6 @@ abstract class Gateway implements GatewayInterface
         if($this->format === false) return $v;
         if(is_numeric($v) && strlen($v)===10){
             $v = date($this->format_date,$v);//时间戳转时间格式
-        }elseif (is_numeric($v) && strlen($v)>=19){
-            $v = ' '.$v;//长数字在excel中会变科学计数法
         }
         return $v;
     }
