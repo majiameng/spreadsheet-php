@@ -143,7 +143,7 @@ class Export extends Gateway {
      * @return void
      * @throws ExceptionAlias
      */
-    public function download($filename){
+    public function download($filename=''){
         if(empty($filename)){
             $filename = $this->fileName;
         }else{
