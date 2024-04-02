@@ -136,7 +136,6 @@ $title = [
 
 //读取并初始化表格内容数据
 $TSpreadSheet = TSpreadSheet::import()
-    ->setFileName($filename)//读取文件路径
     ->initWorkSheet($filename);//读取并初始化表格内容数据
 
 //设置title对应字段,获取表格内容
@@ -145,10 +144,10 @@ var_dump($data);die;
 
 //也可以设置读取第几个sheet
 $TSpreadSheet = TSpreadSheet::import()
-    ->setFileName($filename)
+    ->setFileName($filename)//读取文件路径
     ->setSheet(0)//读取第0个sheet
     ->setTitleRow(1)//表头所在行
-    ->initWorkSheet($filename);
+    ->initWorkSheet();
 
 ```
 打印结果如下

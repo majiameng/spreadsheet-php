@@ -7,11 +7,14 @@ namespace tinymeng\spreadsheet;
 
 // 目录入口
 define('SPREADSHEET_ROOT_PATH', dirname(__DIR__));
+
+use tinymeng\spreadsheet\Gateways\Export;
+use tinymeng\spreadsheet\Gateways\Import;
 use tinymeng\tools\Strings;
 use tinymeng\spreadsheet\Connector\GatewayInterface;
 /**
- * @method static \tinymeng\spreadsheet\Gateways\Export export(array|null $config) 导出
- * @method static \tinymeng\spreadsheet\Gateways\Import import(array|null $config) 导入
+ * @method static Export export(array|null $config) 导出
+ * @method static Import import(array|null $config) 导入
  */
 abstract class TSpreadSheet
 {
