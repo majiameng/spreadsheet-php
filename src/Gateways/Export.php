@@ -20,14 +20,7 @@ use tinymeng\spreadsheet\Util\TConfig;
 class Export extends Gateway {
 
     /**
-     * 获取sheet表格数目
-     * @var
-     */
-    private $sheetCount = 1;
-
-
-    /**
-     * TCfonig
+     * TConfig
      */
     use TConfig;
 
@@ -35,6 +28,7 @@ class Export extends Gateway {
      * TWorkSheet
      */
     use TWorkSheet;
+
 
     /**
      * __construct

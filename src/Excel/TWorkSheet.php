@@ -56,17 +56,19 @@ trait TWorkSheet{
      */
     private $fileTitle=[];
 
-    /**
-     * 标题占用行数
-     * @var int
-     */
-    private $title_row = 1;
 
     /**
      * 左侧分组字段
      * @var array
      */
     private $group_left = [];
+
+
+    /**
+     * 获取sheet表格数目
+     * @var
+     */
+    private $sheetCount = 1;
 
 
     /**

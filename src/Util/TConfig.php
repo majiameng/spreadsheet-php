@@ -71,6 +71,47 @@ trait TConfig{
      */
     private $freezePane = false;
 
+    /**
+     * 当前选中sheet
+     * @var string|bool
+     */
+    private $sheet = 0;
+
+    /**
+     * 标题占用行数
+     * @var int
+     */
+    private $title_row = 1;
+
+    /**
+     * @return bool|int|string
+     */
+    public function getSheet()
+    {
+        return $this->sheet;
+    }
+
+    /**
+     * @param bool|int|string $sheet
+     */
+    public function setSheet($sheet)
+    {
+        $this->sheet = $sheet;
+        return $this;
+    }
+
+
+    public function getTitleRow(): int
+    {
+        return $this->title_row;
+    }
+
+    public function setTitleRow(int $title_row)
+    {
+        $this->title_row = $title_row;
+        return $this;
+    }
+
     public function getCreator(): string
     {
         return $this->creator;

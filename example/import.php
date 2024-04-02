@@ -1,4 +1,6 @@
 <?php
+use tinymeng\spreadsheet\TSpreadSheet;
+
 require __DIR__.'/vendor/autoload.php';
 
 /**
@@ -16,23 +18,50 @@ $title = [
     '下单时间'=>'create_time',
 ];
 
-/**
- * 初始化导入类
- * @var  $importUtil
- */
-$export = new \tinymeng\spreadsheet\Import();
-$export->fileName = $filename;
-$export->sheet = 0;//第一个sheet
-$export->titleFieldsRow = 1;//表头所在行
+//读取并初始化表格内容数据
+$TSpreadSheet = TSpreadSheet::import()
+    ->setFileName($filename)//读取文件路径
+    ->initWorkSheet($filename);//读取并初始化表格内容数据
 
-/** 读取并初始化表格内容数据 */
-$export->initReadExcel();
-
-/** 设置title对应字段 */
-$export->setTitle($title);
-/** 获取表头字段 */
-$fields = $export->getTitleFields();
-
-/** 获取表格内容 */
-$data = $export->getExcelData($fields);
+//设置title对应字段,获取表格内容
+$data = $TSpreadSheet->setTitle($title)->getExcelData();
 var_dump($data);
+/**
+ * array(3) {
+ * [0]=>
+ * array(3) {
+ * ["id"]=>
+ * string(1) "1"
+ * ["order_sn"]=>
+ * string(14) "20180101465464"
+ * ["create_time"]=>
+ * string(19) "2023-06-19 10:06:16"
+ * }
+ * [1]=>
+ * array(3) {
+ * ["id"]=>
+ * string(1) "2"
+ * ["order_sn"]=>
+ * string(14) "20190101465464"
+ * ["create_time"]=>
+ * string(19) "2023-06-19 10:06:16"
+ * }
+ * [2]=>
+ * array(3) {
+ * ["id"]=>
+ * string(1) "3"
+ * ["order_sn"]=>
+ * string(14) "20200101465464"
+ * ["create_time"]=>
+ * string(19) "2023-06-19 10:06:16"
+ * }
+ * }
+ */
+
+
+//读取并初始化表格内容数据
+$TSpreadSheet = TSpreadSheet::import()
+    ->setFileName($filename)
+    ->setSheet(0)//读取第0个sheet
+    ->setTitleRow(1)//表头所在行
+    ->initWorkSheet($filename);//读取并初始化表格内容数据
