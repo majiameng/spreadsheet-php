@@ -11,7 +11,7 @@ namespace tinymeng\spreadsheet\Gateways;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use tinymeng\spreadsheet\Connector\Gateway;
-use tinymeng\spreadsheet\Excel\TSpreadSheet;
+use tinymeng\spreadsheet\Excel\SpreadSheet;
 use tinymeng\spreadsheet\Util\TConfig;
 
 class Import extends Gateway {
@@ -23,7 +23,7 @@ class Import extends Gateway {
     /**
      * TSpreadSheet
      */
-    use TSpreadSheet;
+    use SpreadSheet;
 
 
     /**

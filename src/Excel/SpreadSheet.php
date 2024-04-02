@@ -7,14 +7,12 @@
  */
 namespace tinymeng\spreadsheet\Excel;
 
-
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use tinymeng\tools\File;
 
-trait TSpreadSheet{
+trait SpreadSheet{
 
     /**
      * sheet名称
