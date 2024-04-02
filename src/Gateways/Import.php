@@ -6,7 +6,7 @@
  * @file: Import.php
  * @Date: 2018/7/4 10:15
  */
-namespace tinymeng\spreadsheet;
+namespace tinymeng\spreadsheet\Gateways;
 
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
@@ -17,16 +17,7 @@ use tinymeng\tools\File;
 
 class Import extends Gateway {
 
-    /**
-     * 表格的sheet
-     * @var int
-     */
-    public $sheet = 0;
-    /**
-     * 获取sheet表格数目
-     * @var
-     */
-    public $sheetCount;
+
     /**
      * 表头所在行
      * @var int

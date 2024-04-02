@@ -1,109 +1,38 @@
 <?php
 /**
- * @name: 报表导出查询
- * @Created by IntelliJ IDEA
- * @author: tinymeng
+ * @name: TWorklSheet
+ * @author: JiaMeng <666@majiameng.com>
  * @file: Export.php
- * @Date: 2018/7/4 10:15
+ * @Date: 2024/03/04 10:15
  */
-namespace tinymeng\spreadsheet;
+namespace tinymeng\spreadsheet\Excel;
 
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Style\Alignment;
-use PhpOffice\PhpSpreadsheet\Writer\Exception as ExceptionAlias;
-use tinymeng\spreadsheet\Connector\Gateway;
 use tinymeng\tools\exception\StatusCode;
 use tinymeng\tools\exception\TinymengException;
-use tinymeng\tools\File;
 
-class Export extends Gateway {
+trait TWorklSheet{
 
     /**
      * sheet名称
      * @var
      */
-    public $sheetName;
-    /**
-     * 文件名称
-     * @var
-     */
-    public $fileName;
-    /**
-     * 文件名称
-     * @var
-     */
-    public $group_left;
+    private $sheetName;
     /**
      * 查询数据
      * @var
      */
-    public $data;
+    private $data;
     /**
      * 报表名称(主标题)
      * @var
      */
-    public $mainTitle;
+    private $mainTitle;
     /**
      * 是否需要报表名称(主标题)
      * @var bool
      */
-    public $mainTitleLine = false;
-    /**
-     * 存储方式: download下载, save存储本地
-     * @var string
-     */
-    public $saveType = 'download';
-    /**
-     * 定义表头行高
-     * @var int 常用：22
-     */
-    public $titleHeight = null;
-    /**
-     * 定义表头列宽(未设置则自动计算宽度)
-     * @var int 常用：20
-     */
-    public $titleWidth = null;
-    /**
-     * 定义数据行高
-     * @var int 常用：22
-     */
-    public $height = null;
-
-    /**
-     * 自动筛选(是否开启)
-     * @var bool
-     */
-    public $autoFilter = false;
-    /**
-     * 是否居中
-     * @var string
-     */
-    public $horizontal_center = true;
-    /**
-     * 自动适应文本类型
-     * @var bool
-     */
-    public $autoDataType = true;
-
-    /**
-     * 冻结窗格（要冻结的首行首列"B2"，false不开启）
-     * @var string|bool
-     */
-    public $freezePane = false;
-
-    /**
-     * 文件信息
-     * @var array
-     */
-    public $fileTitle=[];
-
-    /**
-     * 导出文件路径名称
-     * @var string
-     */
-    public $pathName;
+    private $mainTitleLine = false;
 
     /**
      * 定义默认列数
@@ -122,37 +51,80 @@ class Export extends Gateway {
     private $field = [];
 
     /**
-     * excel生成并下载
-     * @return mixed
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     * @author: Tinymeng <666@majiameng.com>
-     * @time: 2022/2/22 11:31
+     * 文件信息
+     * @var array
      */
-    public function exportExcel()
+    private $fileTitle=[];
+
+    /**
+     * 标题占用行数
+     * @var int
+     */
+    private $title_row = 1;
+
+    /**
+     * 左侧分组字段
+     * @var array
+     */
+    private $group_left = [];
+
+
+    /**
+     * @return void
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    public function initWorkSheet()
     {
-        $this->fileTitle['title_row'] = $this->fileTitle['title_row'] ?? 1;          //标题占用行数
-        $this->group_left = $this->fileTitle['group_left'] ?? [];      //左侧分组字段
-
-        /** 实例化定义默认excel **/
-        $this->spreadSheet = new Spreadsheet();
-        $this->spreadSheet->getProperties()->setCreator("TinyMeng")->setLastModifiedBy("TinyMeng");
-        if($this->horizontal_center){
-            $this->spreadSheet->getDefaultStyle()->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER); //默认水平居中
-            $this->spreadSheet->getDefaultStyle()->getAlignment()->setVertical(Alignment::VERTICAL_CENTER); //默认垂直居中
-            $this->spreadSheet->getDefaultStyle()->getAlignment()->setHorizontal(Alignment::VERTICAL_CENTER); //默认垂直居中
-        }
-
-        $this->workSheet = $this->spreadSheet->getActiveSheet();
+        $this->_col = 0;
+        $this->_row = 1;
+        $this->fileTitle = [];
+        $this->data = [];
+        $this->field = [];
         if($this->freezePane) $this->workSheet->freezePane($this->freezePane); //冻结窗格
-        $this->workSheet->setTitle($this->sheetName);   //设置sheet名称
+    }
+
+    /**
+     * @param $fileTitle
+     * @param $data
+     * @return $this
+     * @throws TinymengException
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    public function setWorkSheetData($fileTitle,$data)
+    {
+        if(isset($fileTitle['title_row']) || isset($fileTitle['group_left'])){
+            /**
+             * $fileTitle = [
+             *       'title_row'=>1,
+             *       'group_left'=>[],
+             *       'title'=>[
+             *           '姓名'=>'name'
+             *       ],
+             *  ];
+             */
+            $this->title_row = $fileTitle['title_row']??1;
+            $this->group_left = $fileTitle['group_left']??[];
+            $this->fileTitle = $fileTitle['title']??[];
+        }else{
+            /**
+             *  $fileTitle = [
+             *       '姓名'=>'name',
+             *  ];
+             */
+            $this->fileTitle = $fileTitle;
+        }
+        $this->data = $data;
+
+        /** 设置第一行格式 */
+        if($this->mainTitleLine == true){
+            $this->excelHeader();
+        }
 
         /** 设置表头 **/
         $this->excelTitle();
-        /** 设置第一行格式 */
-        $this->excelHeader();
 
         /** 获取列表里所有字段 **/
-        foreach ($this->fileTitle['title'] as $key => $val){
+        foreach ($this->fileTitle as $key => $val){
             if(is_array($val)){
                 foreach ($val as $k => $v){
                     $this->field[] = $v;
@@ -165,20 +137,7 @@ class Export extends Gateway {
         if(!empty($this->data)){
             $this->excelSetValue();
         }
-        /** 开启自动筛选 **/
-        if($this->autoFilter){
-            $this->spreadSheet->getActiveSheet()->setAutoFilter(
-                $this->spreadSheet->getActiveSheet()->calculateWorksheetDimension()
-            );
-        }
-
-        //文件存储
-        if(empty($this->fileName)){
-            $this->getFileName($this->sheetName);
-        }
-        $saveType = $this->saveType;
-        $result = $this->$saveType();
-        return $result;
+        return $this;
     }
 
     /**
@@ -224,13 +183,11 @@ class Export extends Gateway {
      * @return void
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
-    private function excelHeader(){
-        if($this->mainTitleLine == true){
-            $row = 1;
-            $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
-            $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($this->_col-1).$row);
-            $this->workSheet->getRowDimension($row)->setRowHeight('25');
-        }
+    public function excelHeader(){
+        $row = 1;
+        $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
+        $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($this->_col-1).$row);
+        $this->workSheet->getRowDimension($row)->setRowHeight('25');
     }
 
     /**
@@ -243,7 +200,7 @@ class Export extends Gateway {
         }
 
         $_merge = $this->cellName($this->_col);
-        foreach ($this->fileTitle['title'] as $key => $val) {
+        foreach ($this->fileTitle as $key => $val) {
             if(!empty($this->titleHeight)) {
                 $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);//行高度
             }
@@ -268,8 +225,8 @@ class Export extends Gateway {
                 $this->workSheet->mergeCells($_merge . $this->_row.':' . $this->cellName($this->_col) .$this->_row);
                 $this->workSheet->setCellValue($_merge . $this->_row, $key);//设置值
             } else {
-                if ($this->fileTitle['title_row'] != 1) {
-                    $this->workSheet->mergeCells($rowName . $this->_row.':' . $rowName . ($this->_row + $this->fileTitle['title_row'] - 1));
+                if ($this->title_row != 1) {
+                    $this->workSheet->mergeCells($rowName . $this->_row.':' . $rowName . ($this->_row + $this->title_row - 1));
                 }
                 $this->workSheet->setCellValue($rowName . $this->_row, $key);//设置值
                 if(!empty($this->titleWidth)){
@@ -281,7 +238,7 @@ class Export extends Gateway {
             $this->_col++;
             $_merge = $this->cellName($this->_col);
         }
-        $this->_row += $this->fileTitle['title_row'];//当前行数
+        $this->_row += $this->title_row;//当前行数
     }
 
     /**
@@ -298,12 +255,15 @@ class Export extends Gateway {
         $_lie = 0;
         foreach ($this->field as $v){
             $rowName = $this->cellName($_lie);
+
             if(strpos($v,'.') !== false){
                 $v = explode('.',$v);
                 $content = $val;
                 for ($i=0;$i<count($v);$i++){
                     $content = $content[$v[$i]]??'';
                 }
+            }elseif($v == '_id'){
+                $content = $this->_row-$this->title_row;//自增序号列
             }else{
                 $content = ($val[$v]??'');
             }
@@ -398,51 +358,5 @@ class Export extends Gateway {
         return $data;
     }
 
-    /**
-     * @param $file_name
-     * @return string
-     */
-    private function getFileName($sheetName){
-        $this->fileName = $fileName = $sheetName.'_'.date('Y-m-d').'_'.rand(111,999).'.xlsx';
-        return $fileName;
-    }
-
-    /**
-     * 文件下载
-     * @return void
-     * @throws ExceptionAlias
-     */
-    private function download(){
-        $filename = $this->fileName;
-
-        /** 输出下载 **/
-        ob_end_clean();//清除缓冲区,避免乱码
-        header( 'Access-Control-Allow-Headers:responsetype,content-type,usertoken');
-        header( 'Access-Control-Allow-Methods:GET,HEAD,PUT,POST,DELETE,PATCH');
-        header( 'Access-Control-Allow-Origin:*');
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename="'.$filename);
-        header('Cache-Control: max-age=0');
-
-        $objWrite = IOFactory::createWriter($this->spreadSheet, 'Xlsx');
-        $objWrite->save('php://output');
-        exit();
-    }
-
-    /**
-     * 文件存储
-     * @return string
-     * @throws ExceptionAlias
-     */
-    private function save(): string
-    {
-        //删除当前目录下的同名文件
-        $filename = $this->fileName;
-        if(empty($this->pathName)) $this->pathName = dirname( dirname(dirname(dirname(dirname(__FILE__))))).DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."export".DIRECTORY_SEPARATOR.date('Ymd').DIRECTORY_SEPARATOR;
-        File::mkdir($this->pathName);
-        $objWrite = IOFactory::createWriter($this->spreadSheet, 'Xlsx');
-        $objWrite->save($this->pathName.$filename);
-        return $this->pathName.$filename;
-    }
 
 }

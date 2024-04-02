@@ -89,9 +89,11 @@ abstract class Gateway implements GatewayInterface
     }
 
     /**
-     * @param $url
      * @param $path
+     * @param bool $verifyFile
+     * @param null $zip
      * @return array|string|string[]
+     * @throws PhpSpreadsheetException
      */
     protected function verifyFile($path, $verifyFile = true, $zip = null){
         if ($verifyFile && preg_match('~^data:image/[a-z]+;base64,~', $path) !== 1) {
