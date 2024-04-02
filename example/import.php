@@ -25,7 +25,7 @@ $TSpreadSheet = TSpreadSheet::import()
 
 //设置title对应字段,获取表格内容
 $data = $TSpreadSheet->setTitle($title)->getExcelData();
-var_dump($data);
+var_dump($data);die;
 /**
  * array(3) {
  * [0]=>
@@ -59,9 +59,9 @@ var_dump($data);
  */
 
 
-//读取并初始化表格内容数据
+//也可以设置读取第几个sheet
 $TSpreadSheet = TSpreadSheet::import()
     ->setFileName($filename)
     ->setSheet(0)//读取第0个sheet
     ->setTitleRow(1)//表头所在行
-    ->initWorkSheet($filename);//读取并初始化表格内容数据
+    ->initWorkSheet($filename);
