@@ -62,7 +62,11 @@ $data = [
     ],
 ];
 $TSpreadSheet = TSpreadSheet::export()
+    //创建一个sheet，设置sheet表头，并给表格赋值
     ->createWorkSheet($sheetName)->setWorkSheetData($title,$data);
+//    ->createWorkSheet($sheetName1)->setWorkSheetData($title1,$data1);//如果多个sheet可多次创建
+
+//文件存储本地
 $path = $TSpreadSheet->generate()->save($filename);
 echo '生成excel路径：'.$path;
 //生成excel路径：E:\spreadsheet-php\example\public\export\20240402\export_demo_2024-04-02_351.xlsx
@@ -70,7 +74,7 @@ echo '生成excel路径：'.$path;
 //这样直接输出到浏览器中下载
 $TSpreadSheet->generate()->download($filename);
 
-//配置参数可以传入
+//配置参数可以通过配置文件在初始化时传入
 $config = [
     'pathName'=>null,                       //文件存储位置
     'fileName'=>null,                       //文件名称
@@ -83,5 +87,5 @@ $config = [
     'freezePane'=>false,                    //冻结窗格（要冻结的首行首列"B2"，false不开启）
 ];
 $TSpreadSheet = TSpreadSheet::export($config);
-//配置参数也可以
+//配置参数也可以后期赋值
 $TSpreadSheet = TSpreadSheet::export($config)->setAutoFilter(true);
