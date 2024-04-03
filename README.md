@@ -9,7 +9,9 @@
 基于 `phpoffice/phpspreadsheet` 扩展快速封装使用，避免我们再重复性的造轮子
 
 ## 1.安装
-> composer require tinymeng/spreadsheet  -vvv
+> composer require tinymeng/spreadsheet ^v1.0 -vvv
+
+> 当前版本为v1.0版本,如果你使用new版本的话请查看[master分支](https://github.com/majiameng/spreadsheet-php/)
 
 
 * 2.1 excel导出
