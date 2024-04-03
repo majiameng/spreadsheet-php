@@ -8,13 +8,58 @@
 # PHP Spreadsheet Class
 基于 `phpoffice/phpspreadsheet` 扩展快速封装使用，避免我们再重复性的造轮子
 
-## 1.安装
-> composer require tinymeng/spreadsheet  -vvv
+## 您可以在网站上找到tinymeng/spreadsheet文档。查看“入门”页面以获取快速概述。
 
-> 当前版本为v2.0以上,如果你使用old版本的话请查看[v1.0版本](https://github.com/majiameng/spreadsheet-php/tree/1.0.0)
+* [Wiki Home](https://github.com/majiameng/spreadsheet-php/wiki)
+* [中文文档](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Home)
+* [开始](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Getting-Started)
+* [安装](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Installation)
+* [配置文件](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Configuration)
+* [贡献指南](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Contributing-Guide)
+* [更新日志](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Update-log)
 
-* 2.1 excel导出
-* 2.2 excel导入
+# Installation
+
+```
+composer require tinymeng/spreadsheet  -vvv
+```
+
+> 类库使用的命名空间为 `\\tinymeng\\spreadsheet`
+
+* [开始入门](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Getting-Started)
+
+### 目录结构
+
+```
+.
+├── config                          配置文件目录
+│   └── TSpreadSheet.php            
+├── example                         事例代码
+│   ├── export.php                  导出事例代码
+│   └── import.php                  导入事例代码
+├── src                             代码源文件目录
+│   ├── Connector
+│   │   ├── Gateway.php             必须继承的抽象类
+│   │   └── GatewayInterface.php    必须实现的接口
+│   ├── Gateways
+│   │   ├── Export.php              导出实例
+│   │   └── Import.php              导入实例
+│   ├── Util
+│   │   └── TConfig.php             配置类
+│   └── TSpreadSheet.php            抽象实例类
+├── composer.json                   Composer File
+├── LICENSE                         MIT License
+├── README_zh_cn.md                 中文文档
+└── README.md                       Documentation
+```
+
+
+### Configuration
+[Configuration](https://github.com/majiameng/spreadsheet-php/wiki/zh-cn-Configuration)
+
+
+* 2.1 excel导出 TSpreadSheet::export()
+* 2.2 excel导入 TSpreadSheet::import()
 
 #### 2.1.excel导出
 
