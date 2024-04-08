@@ -68,7 +68,7 @@ $TSpreadSheet = TSpreadSheet::export()
 
 //文件存储本地
 $path = $TSpreadSheet->generate()->save($filename);
-echo '生成excel路径：'.$path;
+echo '生成excel路径：'.$path;exit();
 //生成excel路径：E:\spreadsheet-php\example\public\export\20240402\export_demo_2024-04-02_351.xlsx
 
 //这样直接输出到浏览器中下载
