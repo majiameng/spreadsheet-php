@@ -139,11 +139,13 @@ $TSpreadSheet = TSpreadSheet::export()
 $path = $TSpreadSheet->generate()->save($filename);
 echo '生成excel路径：'.$path;exit();
 //生成excel路径：E:\spreadsheet-php\example\public\export\20240402\export_demo_2024-04-02_351.xlsx
-
-//这样直接输出到浏览器中下载
+```
+这样直接输出到浏览器中下载
+```
 $TSpreadSheet->generate()->download($filename);
-
-//配置参数可以通过配置文件在初始化时传入
+```
+配置参数可以通过配置文件在初始化时传入
+```
 $config = [
     'pathName'=>null,                       //文件存储位置
     'fileName'=>null,                       //文件名称
