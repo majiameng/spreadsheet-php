@@ -206,7 +206,6 @@ trait TWorkSheet{
         $row = 1;
         $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
         $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($this->_col-1).$row);
-        $this->workSheet->getRowDimension($row)->setRowHeight('25');
     }
 
     /**
@@ -297,6 +296,13 @@ trait TWorkSheet{
                     if(!empty($content['width'])) {
                         $drawing->setWidth($content['width']);//只设置高，宽会自适应，如果设置宽后，高则失效
                     }
+                    if(!empty($content['offsetX'])) {
+                        $drawing->setOffsetX($content['offsetX']);//设置X方向偏移量
+                    }
+                    if(!empty($content['offsetY'])) {
+                        $drawing->setOffsetY($content['offsetY']);//设置Y方向偏移量
+                    }
+
                     $drawing->setCoordinates($rowName.$this->_row);
                     $drawing->setWorksheet($this->workSheet);
                 }

@@ -97,6 +97,24 @@ trait SpreadSheet{
     }
 
     /**
+     * @param $value
+     * @return $this
+     */
+    public function setRelativePath($value){
+        $this->relative_path = $value;
+        return $this;
+    }
+
+    /**
+     * @param $value
+     * @return $this
+     */
+    public function setImagePath($value){
+        $this->image_path = $value;
+        return $this;
+    }
+
+    /**
      * getExcelData
      * @param $this->title_fields
      * @return array
@@ -107,6 +125,7 @@ trait SpreadSheet{
         /* 循环读取每个单元格的数据 */
         $result = [];
         $dataRow = $this->titleFieldsRow+1;
+
         //行数循环
         for ($row = $dataRow; $row <= $this->rowCount; $row++){
             $rowFlog = false;//行是否有内容（过滤空行）
