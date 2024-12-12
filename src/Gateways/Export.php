@@ -13,7 +13,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Writer\Exception as ExceptionAlias;
 use tinymeng\spreadsheet\Connector\Gateway;
-use tinymeng\tools\File;
+use tinymeng\tools\FileTool;
 use tinymeng\spreadsheet\Excel\TWorkSheet;
 use tinymeng\spreadsheet\Util\TConfig;
 
@@ -179,7 +179,7 @@ class Export extends Gateway {
         }else{
             $filename = $this->getFileName($filename);
         }
-        File::mkdir($pathName);
+        FileTool::mkdir($pathName);
         $objWrite = IOFactory::createWriter($this->spreadSheet, 'Xlsx');
         $objWrite->save($pathName.$filename);
         return $pathName.$filename;

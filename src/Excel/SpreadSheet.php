@@ -10,7 +10,7 @@ namespace tinymeng\spreadsheet\Excel;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Exception;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
-use tinymeng\tools\File;
+use tinymeng\tools\FileTool;
 
 trait SpreadSheet{
 
@@ -207,7 +207,7 @@ trait SpreadSheet{
      */
     protected function saveImage(Drawing $drawing, $image_filename)
     {
-        File::mkdir($this->image_path);
+        FileTool::mkdir($this->image_path);
         $image_filename .= '.' . $drawing->getExtension();
         switch ($drawing->getExtension()) {
             case 'jpg':

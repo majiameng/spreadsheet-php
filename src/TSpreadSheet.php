@@ -10,7 +10,7 @@ define('SPREADSHEET_ROOT_PATH', dirname(__DIR__));
 
 use tinymeng\spreadsheet\Gateways\Export;
 use tinymeng\spreadsheet\Gateways\Import;
-use tinymeng\tools\Strings;
+use tinymeng\tools\StringTool;
 use tinymeng\spreadsheet\Connector\GatewayInterface;
 /**
  * @method static Export export(array|null $config) 导出
@@ -30,7 +30,7 @@ abstract class TSpreadSheet
      */
     protected static function init($gateway, $config=[])
     {
-        $gateway = Strings::uFirst($gateway);
+        $gateway = StringTool::uFirst($gateway);
         $class = __NAMESPACE__ . '\\Gateways\\' . $gateway;
         if (class_exists($class)) {
             $configFile = SPREADSHEET_ROOT_PATH."/config/TSpreadSheet.php";
