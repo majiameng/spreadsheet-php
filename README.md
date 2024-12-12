@@ -1,4 +1,13 @@
 <h1 align="center">tinymeng/spreadsheet</h1>
+<p align="center">
+<a href="https://scrutinizer-ci.com/g/majiameng/spreadsheet-php/?branch=master"><img src="https://scrutinizer-ci.com/g/majiameng/spreadsheet-php/badges/quality-score.png?b=master" alt="Scrutinizer Code Quality"></a>
+<a href="https://scrutinizer-ci.com/g/majiameng/spreadsheet-php/build-status/master"><img src="https://scrutinizer-ci.com/g/majiameng/spreadsheet-php/badges/build.png?b=master" alt="Build Status"></a>
+<a href="https://packagist.org/packages/tinymeng/oauspreadsheetth"><img src="https://poser.pugx.org/tinymeng/spreadsheet/v/stable" alt="Latest Stable Version"></a>
+<a href="https://github.com/majiameng/spreadsheet-php/tags"><img src="https://poser.pugx.org/tinymeng/spreadsheet/downloads" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/tinymeng/spreadsheet"><img src="https://poser.pugx.org/tinymeng/spreadsheet/v/unstable" alt="Latest Unstable Version"></a>
+<a href="https://github.com/majiameng/spreadsheet-php/blob/master/LICENSE"><img src="https://poser.pugx.org/tinymeng/spreadsheet/license" alt="License"></a>
+</p>
+
 
 欢迎 Star，欢迎 PR！
 
