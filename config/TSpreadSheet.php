@@ -1,5 +1,5 @@
 <?php
-
+use \tinymeng\spreadsheet\Util\ConstCode;
 return [
     'creator'=>'tinymeng',                  //文件创建者
     'pathName'=>null,                       //文件存储位置
@@ -11,4 +11,5 @@ return [
     'autoFilter'=>false,                    //自动筛选(是否开启)
     'autoDataType'=>true,                   //自动适应文本类型
     'freezePane'=>false,                    //冻结窗格（要冻结的首行首列"B2"，false不开启）
+    'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME,//字段映射方式
 ];
