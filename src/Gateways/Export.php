@@ -91,6 +91,9 @@ class Export extends Gateway {
             $this->sheetCount += 1;//总sheet数量
             $this->workSheet->setTitle($sheetName);//设置sheet名称
         }
+        if(empty($this->mainTitle)){
+            $this->mainTitle = $sheetName;
+        }
 
         /** 初始化当前workSheet */
         $this->initWorkSheet();

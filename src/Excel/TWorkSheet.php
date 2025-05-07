@@ -24,16 +24,6 @@ trait TWorkSheet{
      * @var
      */
     private $data;
-    /**
-     * 报表名称(主标题)
-     * @var
-     */
-    private $mainTitle;
-    /**
-     * 是否需要报表名称(主标题)
-     * @var bool
-     */
-    private $mainTitleLine = false;
 
     /**
      * 定义默认列数
@@ -148,7 +138,7 @@ trait TWorkSheet{
         $this->data = $data;
 
         /** 设置第一行格式 */
-        if($this->mainTitleLine == true){
+        if($this->mainTitleLine === true){
             $this->excelHeader();
         }
 
@@ -218,7 +208,19 @@ trait TWorkSheet{
     public function excelHeader(){
         $row = 1;
         $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
-        $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($this->_col-1).$row);
+        
+        // 计算实际的标题列数
+        $titleCount = 0;
+        foreach ($this->fileTitle as $key => $val) {
+            if (is_array($val)) {
+                $titleCount += count($val); // 如果是数组，加上子项的数量
+            } else {
+                $titleCount++; // 如果是单个标题，加1
+            }
+        }
+        
+        // 使用实际的标题列数来合并单元格
+        $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($titleCount-1).$row);
     }
 
     /**
@@ -226,7 +228,7 @@ trait TWorkSheet{
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
     private function excelTitle(){
-        if($this->mainTitleLine == true){
+        if($this->mainTitleLine === true){
             $this->_row ++;//当前行数
         }
 

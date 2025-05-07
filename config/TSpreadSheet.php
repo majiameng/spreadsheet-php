@@ -17,4 +17,6 @@ return [
      * ConstCode::FIELD_MAPPING_METHOD_NAME_CORRESPONDING_FIELD = 2;//名称对应字段
      */
     'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_NAME_CORRESPONDING_FIELD,
+    'mainTitleLine'=>false,                 //主标题行是否显示
+    'mainTitle'=>'',                        //主标题名称，默认为sheet的名称
 ];

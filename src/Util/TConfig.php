@@ -82,6 +82,17 @@ trait TConfig{
      * @var int
      */
     private $title_row = 1;
+    /**
+     * 报表名称(主标题)
+     * @var
+     */
+    private $mainTitle = '';
+
+    /**
+     * 是否需要报表名称(主标题)
+     * @var bool
+     */
+    private $mainTitleLine = false;
 
     /**
      * @return bool|int|string
@@ -252,6 +263,26 @@ trait TConfig{
         }
         $pathName = dirname( dirname(dirname(SPREADSHEET_ROOT_PATH))).DIRECTORY_SEPARATOR."public".DIRECTORY_SEPARATOR."export".DIRECTORY_SEPARATOR.date('Ymd').DIRECTORY_SEPARATOR;
         return $pathName;
+    }
+
+    public function isMainTitleLine(): bool
+    {
+        return $this->mainTitleLine;
+    }
+
+    public function setMainTitleLine(bool $mainTitleLine): void
+    {
+        $this->mainTitleLine = $mainTitleLine;
+    }
+
+    public function getMainTitle(): string
+    {
+        return $this->mainTitle;
+    }
+
+    public function setMainTitle(string $mainTitle): void
+    {
+        $this->mainTitle = $mainTitle;
     }
 
 }
