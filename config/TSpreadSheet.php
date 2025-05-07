@@ -11,5 +11,10 @@ return [
     'autoFilter'=>false,                    //自动筛选(是否开启)
     'autoDataType'=>true,                   //自动适应文本类型
     'freezePane'=>false,                    //冻结窗格（要冻结的首行首列"B2"，false不开启）
-    'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME,//字段映射方式
+    /**
+     * 字段映射方式
+     * ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME = 1;//字段对应名称
+     * ConstCode::FIELD_MAPPING_METHOD_NAME_CORRESPONDING_FIELD = 2;//名称对应字段
+     */
+    'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_NAME_CORRESPONDING_FIELD,
 ];

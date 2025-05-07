@@ -8,6 +8,7 @@
 namespace tinymeng\spreadsheet\Excel;
 
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use tinymeng\spreadsheet\Util\ConstCode;
 use tinymeng\tools\exception\StatusCode;
 use tinymeng\tools\exception\TinymengException;
 
@@ -71,6 +72,12 @@ trait TWorkSheet{
     private $sheetCount = 1;
 
     /**
+     * 字段映射方式
+     * @var int
+     */
+    private $fieldMappingMethod = ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME;
+
+    /**
      * @param $data
      * @return $this
      */
@@ -123,14 +130,20 @@ trait TWorkSheet{
              */
             $this->title_row = $fileTitle['title_row']??1;
             $this->group_left = $fileTitle['group_left']??[];
-            $this->fileTitle = $fileTitle['title']??[];
+            $titleData = $fileTitle['title']??[];
         }else{
             /**
              *  $fileTitle = [
              *       '姓名'=>'name',
              *  ];
              */
-            $this->fileTitle = $fileTitle;
+            $titleData = $fileTitle;
+        }
+        // 根据字段映射方式处理 title
+        if ($this->fieldMappingMethod === ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME) {
+            $this->fileTitle = array_flip($titleData);// 字段对应名称方式 - 需要将键值对调
+        }else{
+            $this->fileTitle = $titleData;// 名称对应字段方式 - 保持原样
         }
         $this->data = $data;
 
@@ -183,13 +196,13 @@ trait TWorkSheet{
                         'count' => count($v)
                     ];
                 }
-                $this->excelGroupLeft($data, 0, $group_left_count);
+                $this->excelGroupLeft($data, $group_left_count);
             }elseif($group_left_count == 2){
                 foreach ($this->data as $v) {
                     $data[$v[$this->group_left[0]]][$v[$this->group_left[1]]][] = $v;
                 }
                 $this->data = $this->arrayCount($data);
-                $this->excelGroupLeft($this->data, 0, $group_left_count);
+                $this->excelGroupLeft($this->data, $group_left_count);
             }else{
                 throw new TinymengException(StatusCode::COMMON_PARAM_INVALID,
                     '左侧分组过多，导出失败！'
@@ -326,35 +339,56 @@ trait TWorkSheet{
     /**
      * 单元格合并并赋值
      * @param array $data 数据
-     * @param int $_lie   开始行数
      * @param $group_left_count
      * @author tinymeng
      */
-    private function excelGroupLeft(array $data, int $_lie, $group_left_count)
+    private function excelGroupLeft(array $data, $group_left_count)
     {
-        $group_start = $this->_col; //二级合并单元格开始
+        // 获取分组字段在field中的实际位置
+        $group_field_positions = [];
+        foreach($this->group_left as $group_field){
+            $position = array_search($group_field, $this->field);
+            if($position !== false){
+                $group_field_positions[] = $position;
+            }
+        }
+
+        if(empty($group_field_positions)){
+            throw new TinymengException(StatusCode::COMMON_PARAM_INVALID, '分组字段未在标题中定义');
+        }
+
+        $group_start = $this->_row;
         foreach ($data as $key => $val){
-            $rowName = $this->cellName($_lie);
-            $coordinate = $rowName.$this->_col.':'.$rowName.($this->_col+$val['count']-1);
+            // 第一级分组的合并单元格
+            $rowName = $this->cellName($group_field_positions[0]); // 使用第一个分组字段的实际位置
+            $coordinate = $rowName.$this->_row.':'.$rowName.($this->_row+$val['count']-1);
             $this->workSheet->mergeCells($coordinate);
+            $this->workSheet->setCellValue($rowName.$this->_row, $key);
+            
             if($group_left_count == 1){
                 foreach ($val['data'] as $data){
                     $this->excelSetCellValue($data);
                 }
             }else{
-                $rowName = $this->cellName($_lie+1);  //对应的列值
+                $sub_group_start = $this->_row;
+                $rowName = $this->cellName($group_field_positions[1]); // 使用第二个分组字段的实际位置
+                
                 foreach ($val['data'] as $k => $v){
-                    $group_end_col = $group_start + $v['count']-1;
-                    $coordinate = $rowName.$group_start.':'.$rowName.$group_end_col;
+                    $coordinate = $rowName.$sub_group_start.':'.$rowName.($sub_group_start+$v['count']-1);
                     $this->workSheet->mergeCells($coordinate);
-                    $group_start = $group_end_col+1;
+                    $this->workSheet->setCellValue($rowName.$sub_group_start, $k);
+                    
                     foreach ($v['data'] as $data){
                         $this->excelSetCellValue($data);
                     }
+                    
+                    $sub_group_start = $sub_group_start + $v['count'];
                 }
             }
+            
+            $this->_row = $group_start + $val['count'];
+            $group_start = $this->_row;
         }
-
     }
 
     /**

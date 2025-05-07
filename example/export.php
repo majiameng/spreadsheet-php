@@ -1,5 +1,6 @@
 <?php
 use tinymeng\spreadsheet\TSpreadSheet;
+use tinymeng\spreadsheet\Util\ConstCode;
 
 require __DIR__.'/../vendor/autoload.php';
 
@@ -10,6 +11,7 @@ $filename = $sheetName = "export_demo";
 /**
  * excel表头
  */
+//config 中 'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_NAME_CORRESPONDING_FIELD,//名称对应字段
 $title = [
     '序号'=>'_id',
     'ID'=>'id',
@@ -19,6 +21,17 @@ $title = [
     '下单时间'=>'create_time',
     '图片'=>'image',
 ];
+
+//config 中 'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME,//字段对应名称
+//$title = [
+//    '_id'=>'序号',
+//    'id'=>'ID',
+//    'order_sn'=>'订单编号',
+//    'user_id'=>'用户id',
+//    'day'=>'结算日期',
+//    'create_time'=>'下单时间',
+//    'image'=>'图片',
+//];
 
 /**
  * excel数据数组（二维）
@@ -85,6 +98,7 @@ $config = [
     'autoFilter'=>false,                    //自动筛选(是否开启)
     'autoDataType'=>true,                   //自动适应文本类型
     'freezePane'=>false,                    //冻结窗格（要冻结的首行首列"B2"，false不开启）
+    'fieldMappingMethod'=>ConstCode::FIELD_MAPPING_METHOD_NAME_CORRESPONDING_FIELD,//字段映射方式
 ];
 $TSpreadSheet = TSpreadSheet::export($config);
 //配置参数也可以后期赋值
