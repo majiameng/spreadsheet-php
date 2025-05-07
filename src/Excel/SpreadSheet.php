@@ -221,6 +221,9 @@ trait SpreadSheet{
                 break;
             case 'png':
                 $source = imagecreatefrompng($drawing->getPath());
+                // 保持透明度设置
+                imagealphablending($source, false);
+                imagesavealpha($source, true);
                 imagepng($source, $this->image_path . $image_filename);
                 break;
             default:

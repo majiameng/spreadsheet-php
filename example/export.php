@@ -1,7 +1,7 @@
 <?php
 use tinymeng\spreadsheet\TSpreadSheet;
 
-require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/../vendor/autoload.php';
 
 /**
  * excel生成文件名
@@ -32,7 +32,7 @@ $data = [
         'create_time'=>'1687140376',
         'image'=>[
             'type'=>'image',
-            'content'=>'https://sns.bjwmsc.com/wp-content/themes/zibll/img/logo.png',//网络图片确保存在
+            'content'=>'http://static.majiameng.com/main/img/portrait.jpg',//网络图片确保存在
             'height'=>100,
 //            'width'=>100,//只设置高，宽会自适应，如果设置宽后，高则失效
         ],
