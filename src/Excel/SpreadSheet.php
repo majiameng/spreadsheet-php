@@ -208,18 +208,29 @@ trait SpreadSheet{
     protected function saveImage(Drawing $drawing, $image_filename)
     {
         FileTool::mkdir($this->image_path);
-        $image_filename .= '.' . $drawing->getExtension();
-        switch ($drawing->getExtension()) {
-            case 'jpg':
-            case 'jpeg':
+
+        // 获取文件的真实MIME类型
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mime_type = $finfo->file($drawing->getPath());
+
+        // 根据MIME类型确定真实的图片格式
+        switch ($mime_type) {
+            case 'image/jpg':
+            case 'image/jpeg':
+                $real_extension = 'jpg';
+                $image_filename .= '.'.$real_extension;
                 $source = imagecreatefromjpeg($drawing->getPath());
                 imagejpeg($source, $this->image_path . $image_filename);
                 break;
-            case 'gif':
+            case 'image/gif':
+                $real_extension = 'gif';
+                $image_filename .= '.'.$real_extension;
                 $source = imagecreatefromgif($drawing->getPath());
                 imagegif($source, $this->image_path . $image_filename);
                 break;
-            case 'png':
+            case 'image/png':
+                $real_extension = 'png';
+                $image_filename .= '.'.$real_extension;
                 $source = imagecreatefrompng($drawing->getPath());
                 // 保持透明度设置
                 imagealphablending($source, false);
@@ -230,6 +241,6 @@ trait SpreadSheet{
                 throw new Exception('image format error!');
         }
 
-        return $drawing->getExtension();
+        return $real_extension;
     }
 }
