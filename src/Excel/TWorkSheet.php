@@ -68,6 +68,29 @@ trait TWorkSheet{
     private $fieldMappingMethod = ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME;
 
     /**
+     * 需要自动合并的字段
+     * @var array
+     */
+    private $mergeColumns = [];
+
+    /**
+     * 小计行样式
+     * @var array
+     */
+    private $subtotalStyle = [];
+    /**
+     * 全表样式
+     * @var array
+     */
+    private $sheetStyle = [];
+
+    /**
+     * 用户自定义表格操作回调
+     * @var callable|null
+     */
+    private $complexFormatCallback = null;
+
+    /**
      * @param $data
      * @return $this
      */
@@ -121,6 +144,10 @@ trait TWorkSheet{
             $this->title_row = $fileTitle['title_row']??1;
             $this->group_left = $fileTitle['group_left']??[];
             $titleData = $fileTitle['title']??[];
+            // 新增：读取mergeColumns配置
+            if (isset($fileTitle['mergeColumns'])) {
+                $this->mergeColumns = $fileTitle['mergeColumns'];
+            }
         }else{
             /**
              *  $fileTitle = [
@@ -138,7 +165,7 @@ trait TWorkSheet{
         $this->data = $data;
 
         /** 设置第一行格式 */
-        if($this->mainTitleLine === true){
+        if(!empty($this->mainTitle)){
             $this->excelHeader();
         }
 
@@ -159,6 +186,12 @@ trait TWorkSheet{
         if(!empty($this->data)){
             $this->excelSetValue();
         }
+        // 新增：应用全表样式
+        $this->applySheetStyle();
+        // 新增：调用自定义表格操作回调
+        if (is_callable($this->complexFormatCallback)) {
+            call_user_func($this->complexFormatCallback, $this->workSheet);
+        }
         return $this;
     }
 
@@ -169,8 +202,13 @@ trait TWorkSheet{
      */
     public function excelSetValue(){
         if(empty($this->group_left)){ //判断左侧是否分组
+            $rowStart = $this->_row;
             foreach ($this->data as $key => $val){
                 $this->excelSetCellValue($val);
+            }
+            // 新增：处理mergeColumns自动合并
+            if (!empty($this->mergeColumns)) {
+                $this->autoMergeColumns($rowStart, $this->_row - 1);
             }
         }else{   //根据设置分组字段进行分组
             /** 数据分组 **/
@@ -207,18 +245,20 @@ trait TWorkSheet{
      */
     public function excelHeader(){
         $row = 1;
-        $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
-        
+        if(!empty($this->mainTitle)){
+            $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
+        }
+
         // 计算实际的标题列数
         $titleCount = 0;
-        foreach ($this->fileTitle as $key => $val) {
+        foreach ($this->fileTitle as $val) {
             if (is_array($val)) {
                 $titleCount += count($val); // 如果是数组，加上子项的数量
             } else {
                 $titleCount++; // 如果是单个标题，加1
             }
         }
-        
+
         // 使用实际的标题列数来合并单元格
         $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($titleCount-1).$row);
     }
@@ -228,7 +268,7 @@ trait TWorkSheet{
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
     private function excelTitle(){
-        if($this->mainTitleLine === true){
+        if(!empty($this->mainTitle)){
             $this->_row ++;//当前行数
         }
 
@@ -366,10 +406,25 @@ trait TWorkSheet{
             $coordinate = $rowName.$this->_row.':'.$rowName.($this->_row+$val['count']-1);
             $this->workSheet->mergeCells($coordinate);
             $this->workSheet->setCellValue($rowName.$this->_row, $key);
+
+            // 新增：合并mergeColumns指定的其它列
+            if (!empty($this->mergeColumns)) {
+                foreach ($this->mergeColumns as $field) {
+                    // 跳过分组字段本身
+                    if (in_array($field, $this->group_left)) continue;
+                    $colIdx = array_search($field, $this->field);
+                    if ($colIdx !== false) {
+                        $colLetter = $this->cellName($colIdx);
+                        $this->workSheet->mergeCells($colLetter.$this->_row.':'.$colLetter.($this->_row+$val['count']-1));
+                        // 取本组第一个数据的值
+                        $this->workSheet->setCellValue($colLetter.$this->_row, $val['data'][0][$field] ?? '');
+                    }
+                }
+            }
             
             if($group_left_count == 1){
-                foreach ($val['data'] as $data){
-                    $this->excelSetCellValue($data);
+                foreach ($val['data'] as $dataRow){
+                    $this->excelSetCellValue($dataRow);
                 }
             }else{
                 $sub_group_start = $this->_row;
@@ -417,6 +472,62 @@ trait TWorkSheet{
             ];
         }
         return $data;
+    }
+
+    /**
+     * 自动合并指定字段相同值的单元格
+     * @param int $rowStart 数据起始行
+     * @param int $rowEnd 数据结束行
+     */
+    private function autoMergeColumns($rowStart, $rowEnd)
+    {
+        if ($rowEnd <= $rowStart) return;
+        foreach ($this->mergeColumns as $fieldName) {
+            $colIdx = array_search($fieldName, $this->field);
+            if ($colIdx === false) continue;
+            $colLetter = $this->cellName($colIdx);
+            $lastValue = null;
+            $mergeStart = $rowStart;
+            for ($row = $rowStart; $row <= $rowEnd; $row++) {
+                $cellValue = $this->workSheet->getCell($colLetter . $row)->getValue();
+                if ($lastValue !== null && $cellValue !== $lastValue) {
+                    if ($row - $mergeStart > 1) {
+                        $this->workSheet->mergeCells($colLetter . $mergeStart . ':' . $colLetter . ($row - 1));
+                    }
+                    $mergeStart = $row;
+                }
+                $lastValue = $cellValue;
+            }
+            // 处理最后一组
+            if ($rowEnd - $mergeStart + 1 > 1) {
+                $this->workSheet->mergeCells($colLetter . $mergeStart . ':' . $colLetter . $rowEnd);
+            }
+        }
+    }
+
+    /**
+     * 应用全表样式
+     */
+    private function applySheetStyle()
+    {
+        if (empty($this->sheetStyle)) return;
+        // 计算数据区范围
+        $startCol = 'A';
+        $endCol = $this->cellName(count($this->field) - 1);
+        $startRow = 1;
+        $endRow = $this->_row - 1;
+        $cellRange = $startCol . $startRow . ':' . $endCol . $endRow;
+        $this->workSheet->getStyle($cellRange)->applyFromArray($this->sheetStyle);
+    }
+
+    /**
+     * 设置自定义表格操作回调
+     * @param callable $fn
+     * @return $this
+     */
+    public function complexFormat(callable $fn) {
+        $this->complexFormatCallback = $fn;
+        return $this;
     }
 
 

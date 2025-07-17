@@ -89,12 +89,6 @@ trait TConfig{
     private $mainTitle = '';
 
     /**
-     * 是否需要报表名称(主标题)
-     * @var bool
-     */
-    private $mainTitleLine = false;
-
-    /**
      * @return bool|int|string
      */
     public function getSheet()
@@ -265,24 +259,15 @@ trait TConfig{
         return $pathName;
     }
 
-    public function isMainTitleLine(): bool
-    {
-        return $this->mainTitleLine;
-    }
-
-    public function setMainTitleLine(bool $mainTitleLine): void
-    {
-        $this->mainTitleLine = $mainTitleLine;
-    }
-
     public function getMainTitle(): string
     {
         return $this->mainTitle;
     }
 
-    public function setMainTitle(string $mainTitle): void
+    public function setMainTitle(string $mainTitle)
     {
         $this->mainTitle = $mainTitle;
+        return $this;
     }
 
 }
