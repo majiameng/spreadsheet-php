@@ -31,7 +31,7 @@ $TSpreadSheet = TSpreadSheet::import()
 
 //3. 设置title对应字段,获取表格内容
 $data = $TSpreadSheet->setTitle($title)->getExcelData();
-var_dump($data);die;
+//var_dump($data);die;
 /**
  * array(3) {
  * [0]=>

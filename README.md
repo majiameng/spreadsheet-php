@@ -200,7 +200,7 @@ $TSpreadSheet = TSpreadSheet::import()
 
 //设置title对应字段,获取表格内容
 $data = $TSpreadSheet->setTitle($title)->getExcelData();
-var_dump($data);die;
+//var_dump($data);die;
 
 //也可以设置读取第几个sheet
 $TSpreadSheet = TSpreadSheet::import()
