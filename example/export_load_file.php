@@ -12,17 +12,14 @@ $filename = $sheetName = "export_group_demo";
  * excel表头
  * 注意：分组字段必须在title中定义
  */
+$startRow = 4;
 $titleConfig = [
-    'title_row' => 2,  // 表头占用行数
-    'title_start_row' => null,  // 表头开始行数
+    'title_show' => true,
+    'data_start_row' => $startRow,  // 内容开始行数
     'group_left' => ['id'], // 以id分组
     'mergeColumns' => ['meeting_name', 'time'], // 需要自动合并的字段
     'title' => [
-        '场次编号' => 'id',
-        '会议名称' => 'meeting_name',
-        '会议时间' => 'time',
-        '姓名' => 'turename',
-        '服务费' => 'price',
+        'id', 'meeting_name', 'time', 'turename', 'price',
     ]
 ];
 
@@ -95,6 +92,11 @@ $data = [
     ],
 ];
 
+$data[] = [
+    'id' => '合计',
+    'price' => ['formula' => '=SUM(E'.$startRow.':E'.($startRow+count($data)-1).')'],
+];
+
 // 配置参数
 $config = [
     'horizontalCenter' => true,               // 是否居中
@@ -116,36 +118,26 @@ $config = [
     ],
 ];
 
-$complexFormat = function($sheet) {
+$complexFormat = function($sheet) use ($startRow,$data) {
+    $endRow = $startRow + count($data) - 1;
+    $cellRange = "A{$startRow}:E{$endRow}";
 
-    // 第1行：大标题
-    $sheet->mergeCells('A1:E1');
-    $sheet->setCellValue('A1', '非常之路-慢性病诊疗方案公开课-会议执行总结报告');
-    $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
-    $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-
-    // 第2行：导出时间
-    $sheet->mergeCells('A2:E2');
-    $sheet->setCellValue('A2', '导出时间：' . date('Y-m-d'));
-    $sheet->getStyle('A2')->getFont()->setSize(10)->getColor()->setRGB('888888');
-    $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
-
-
-    var_dump(222);
-    // 合并A11到B11
-    $sheet->mergeCells('A11:B11');
-    // 设置A1字体加粗、字号14、红色（演示，实际A1已设置16号字）
-    $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FF0000');
-    // 设置A2:E2背景色
-    $sheet->getStyle('A2:E2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-        ->getStartColor()->setRGB('FFFFCC');
-    // 你可以继续添加更多自定义操作
+    // 设置边框
+    $sheet->getStyle($cellRange)->getBorders()->getAllBorders()->setBorderStyle(
+        \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN
+    );
 };
+
+
+
+// 模板文件（带有已设置好格式的文件）
+$filePath = './test.xlsx';
 
 // 创建导出实例并设置数据
 $TSpreadSheet = TSpreadSheet::export($config)
-    ->createWorkSheet($sheetName)
     ->setMainTitle("北京222公司") //设置大标题
+    ->loadFile($filePath)// 加载模板文件
+    ->selectWorkSheet()// 选择工作表
     ->complexFormat($complexFormat)
     ->setWorkSheetData($titleConfig, $data);
 

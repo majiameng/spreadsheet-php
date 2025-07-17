@@ -35,7 +35,7 @@ class Import extends Gateway {
         if(!empty($filename)){
             $this->setFileName($filename);
         }
-        $this->spreadSheet = IOFactory::load($this->fileName);
+        $this->loadFile($this->fileName);
         //获取sheet表格数目
         $this->sheetCount = $this->spreadSheet->getSheetCount();
         //默认选中sheet0表
@@ -49,6 +49,5 @@ class Import extends Gateway {
         $this->cellName = $this->getCellName($this->columnCount);
         return $this;
     }
-
 
 }

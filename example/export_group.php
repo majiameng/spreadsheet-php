@@ -12,7 +12,7 @@ $filename = $sheetName = "export_group_demo";
  * excel表头
  * 注意：分组字段必须在title中定义
  */
-$fileTitle = [
+$titleConfig = [
     'title_row' => 2,  // 表头行号
     'group_left' => ['user_id', 'day'],  // 左侧分组字段，最多支持两级分组
     'title' => [
@@ -86,7 +86,7 @@ $config = [
 // 创建导出实例并设置数据
 $TSpreadSheet = TSpreadSheet::export($config)
     ->createWorkSheet($sheetName)
-    ->setWorkSheetData($fileTitle, $data);
+    ->setWorkSheetData($titleConfig, $data);
 
 // 生成并保存文件
 $path = $TSpreadSheet->generate()->save($filename);

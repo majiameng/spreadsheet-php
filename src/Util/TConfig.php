@@ -82,6 +82,7 @@ trait TConfig{
      * @var int
      */
     private $title_row = 1;
+
     /**
      * 报表名称(主标题)
      * @var

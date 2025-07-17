@@ -2,6 +2,7 @@
 namespace tinymeng\spreadsheet\Connector;
 
 use PhpOffice\PhpSpreadsheet\Exception as PhpSpreadsheetException;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
@@ -122,5 +123,29 @@ abstract class Gateway implements GatewayInterface
             }
         }
         return $path;
+    }
+
+    /**
+     * 加载文件
+     * @param $fileName
+     * @return $this
+     */
+    public function loadFile($fileName)
+    {
+        $this->spreadSheet = IOFactory::load($fileName);
+        return $this;
+    }
+
+
+    /**
+     * 选择sheet
+     * @param $sheetIndex
+     * @return $this
+     * @throws \PhpOffice\PhpSpreadsheet\Exception
+     */
+    public function selectWorkSheet($sheetIndex=0)
+    {
+        $this->workSheet = $this->spreadSheet->getSheet($sheetIndex);
+        return $this;
     }
 }

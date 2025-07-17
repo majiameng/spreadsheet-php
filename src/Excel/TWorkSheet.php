@@ -89,6 +89,10 @@ trait TWorkSheet{
      * @var callable|null
      */
     private $complexFormatCallback = null;
+    /**
+     * @var array
+     */
+    private $titleConfig = [];
 
     /**
      * @param $data
@@ -129,11 +133,12 @@ trait TWorkSheet{
      * @throws TinymengException
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
-    public function setWorkSheetData($fileTitle,$data)
+    public function setWorkSheetData($titleConfig,$data)
     {
-        if(isset($fileTitle['title_row']) || isset($fileTitle['group_left'])){
+        $this->titleConfig = $titleConfig;
+        if(isset($titleConfig['title_row']) || isset($titleConfig['group_left'])){
             /**
-             * $fileTitle = [
+             * $titleConfig = [
              *       'title_row'=>1,
              *       'group_left'=>[],
              *       'title'=>[
@@ -141,20 +146,20 @@ trait TWorkSheet{
              *       ],
              *  ];
              */
-            $this->title_row = $fileTitle['title_row']??1;
-            $this->group_left = $fileTitle['group_left']??[];
-            $titleData = $fileTitle['title']??[];
+            $this->title_row = $titleConfig['title_row']??1;
+            $this->group_left = $titleConfig['group_left']??[];
+            $titleData = $titleConfig['title']??[];
             // 新增：读取mergeColumns配置
-            if (isset($fileTitle['mergeColumns'])) {
-                $this->mergeColumns = $fileTitle['mergeColumns'];
+            if (isset($titleConfig['mergeColumns'])) {
+                $this->mergeColumns = $titleConfig['mergeColumns'];
             }
         }else{
             /**
-             *  $fileTitle = [
+             *  $titleConfig = [
              *       '姓名'=>'name',
              *  ];
              */
-            $titleData = $fileTitle;
+            $titleData = $titleConfig;
         }
         // 根据字段映射方式处理 title
         if ($this->fieldMappingMethod === ConstCode::FIELD_MAPPING_METHOD_FIELD_CORRESPONDING_NAME) {
@@ -167,6 +172,7 @@ trait TWorkSheet{
         /** 设置第一行格式 */
         if(!empty($this->mainTitle)){
             $this->excelHeader();
+            $this->_row ++;//当前行数
         }
 
         /** 设置表头 **/
@@ -201,6 +207,10 @@ trait TWorkSheet{
      * @time: 2022/2/22 11:43
      */
     public function excelSetValue(){
+        if(!empty($this->titleConfig['data_start_row'])){
+            $this->_row = $this->titleConfig['data_start_row'];
+        }
+
         if(empty($this->group_left)){ //判断左侧是否分组
             $rowStart = $this->_row;
             foreach ($this->data as $key => $val){
@@ -268,8 +278,11 @@ trait TWorkSheet{
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
     private function excelTitle(){
-        if(!empty($this->mainTitle)){
-            $this->_row ++;//当前行数
+        if(isset($this->titleConfig['title_show']) && $this->titleConfig['title_show']===false){
+            return;
+        }
+        if(!empty($this->titleConfig['title_start_row'])){
+            $this->_row = $this->titleConfig['title_start_row'];
         }
 
         $_merge = $this->cellName($this->_col);
@@ -361,6 +374,9 @@ trait TWorkSheet{
                     $drawing->setCoordinates($rowName.$this->_row);
                     $drawing->setWorksheet($this->workSheet);
                 }
+            }elseif(is_array($content) && isset($content['formula'])){
+                // 新增：支持 ['formula' => '公式'] 写法
+                $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content['formula'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA);
             }else {
                 $content = $this->formatValue($content);//格式化数据
                 if (is_numeric($content)){
