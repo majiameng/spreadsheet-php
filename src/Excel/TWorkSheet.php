@@ -226,7 +226,9 @@ trait TWorkSheet{
             $group_left_count = count($this->group_left);
             if($group_left_count == 1){
                 foreach ($this->data as $k => $v){
-                    $data[$v[$this->group_left[0]]][] = $v;
+                    if(isset($v[$this->group_left[0]])){
+                        $data[$v[$this->group_left[0]]][] = $v;
+                    }
                 }
                 foreach ($data as $k =>$v){
                     $data[$k] = [
@@ -237,7 +239,9 @@ trait TWorkSheet{
                 $this->excelGroupLeft($data, $group_left_count);
             }elseif($group_left_count == 2){
                 foreach ($this->data as $v) {
-                    $data[$v[$this->group_left[0]]][$v[$this->group_left[1]]][] = $v;
+                    if(isset($v[$this->group_left[0]]) && isset($v[$this->group_left[1]])){
+                        $data[$v[$this->group_left[0]]][$v[$this->group_left[1]]][] = $v;
+                    }
                 }
                 $this->data = $this->arrayCount($data);
                 $this->excelGroupLeft($this->data, $group_left_count);
@@ -278,9 +282,6 @@ trait TWorkSheet{
      * @throws \PhpOffice\PhpSpreadsheet\Exception
      */
     private function excelTitle(){
-        if(isset($this->titleConfig['title_show']) && $this->titleConfig['title_show']===false){
-            return;
-        }
         if(!empty($this->titleConfig['title_start_row'])){
             $this->_row = $this->titleConfig['title_start_row'];
         }
@@ -296,7 +297,9 @@ trait TWorkSheet{
                 $num = 1;
                 $_cols = $this->_col;
                 foreach ($val as $k => $v) {
-                    $this->workSheet->setCellValue($this->cellName($_cols) . ($this->_row+1), $k);
+                    if(!isset($this->titleConfig['title_show']) || $this->titleConfig['title_show']!==false) {
+                        $this->workSheet->setCellValue($this->cellName($_cols) . ($this->_row+1), $k);
+                    }
                     if(!empty($this->titleWidth)) {
                         $this->workSheet->getColumnDimension($this->cellName($_cols))->setWidth($this->titleWidth); //列宽度
                     }else{
@@ -309,12 +312,16 @@ trait TWorkSheet{
                     $_cols++;
                 }
                 $this->workSheet->mergeCells($_merge . $this->_row.':' . $this->cellName($this->_col) .$this->_row);
-                $this->workSheet->setCellValue($_merge . $this->_row, $key);//设置值
+                if(!isset($this->titleConfig['title_show']) || $this->titleConfig['title_show']!==false) {
+                    $this->workSheet->setCellValue($_merge . $this->_row, $key);//设置值
+                }
             } else {
                 if ($this->title_row != 1) {
                     $this->workSheet->mergeCells($rowName . $this->_row.':' . $rowName . ($this->_row + $this->title_row - 1));
                 }
-                $this->workSheet->setCellValue($rowName . $this->_row, $key);//设置值
+                if(!isset($this->titleConfig['title_show']) || $this->titleConfig['title_show']!==false) {
+                    $this->workSheet->setCellValue($rowName . $this->_row, $key);//设置值
+                }
                 if(!empty($this->titleWidth)){
                     $this->workSheet->getColumnDimension($rowName)->setWidth($this->titleWidth); //列宽度
                 }else{
@@ -437,7 +444,7 @@ trait TWorkSheet{
                     }
                 }
             }
-            
+
             if($group_left_count == 1){
                 foreach ($val['data'] as $dataRow){
                     $this->excelSetCellValue($dataRow);
@@ -445,20 +452,20 @@ trait TWorkSheet{
             }else{
                 $sub_group_start = $this->_row;
                 $rowName = $this->cellName($group_field_positions[1]); // 使用第二个分组字段的实际位置
-                
+
                 foreach ($val['data'] as $k => $v){
                     $coordinate = $rowName.$sub_group_start.':'.$rowName.($sub_group_start+$v['count']-1);
                     $this->workSheet->mergeCells($coordinate);
                     $this->workSheet->setCellValue($rowName.$sub_group_start, $k);
-                    
+
                     foreach ($v['data'] as $data){
                         $this->excelSetCellValue($data);
                     }
-                    
+
                     $sub_group_start = $sub_group_start + $v['count'];
                 }
             }
-            
+
             $this->_row = $group_start + $val['count'];
             $group_start = $this->_row;
         }
