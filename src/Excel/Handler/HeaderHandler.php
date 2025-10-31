@@ -5,9 +5,10 @@
  * @file: HeaderHandler.php
  * @Date: 2025/01/XX
  */
-namespace tinymeng\spreadsheet\Excel;
+namespace tinymeng\spreadsheet\Excel\Handler;
 
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use tinymeng\spreadsheet\Util\WorkSheetHelper;
 
 class HeaderHandler
 {
@@ -16,10 +17,9 @@ class HeaderHandler
      * @param Worksheet $worksheet
      * @param string $mainTitle
      * @param array $fileTitle
-     * @param callable $cellNameFunc
      * @return int 返回标题所在行号
      */
-    public static function setHeader(Worksheet $worksheet, string $mainTitle, array $fileTitle, callable $cellNameFunc): int
+    public static function setHeader(Worksheet $worksheet, string $mainTitle, array $fileTitle): int
     {
         $row = 1;
         if (!empty($mainTitle)) {
@@ -36,7 +36,7 @@ class HeaderHandler
             }
             
             // 使用实际的标题列数来合并单元格
-            $worksheet->mergeCells('A' . $row . ':' . $cellNameFunc($titleCount - 1) . $row);
+            $worksheet->mergeCells('A' . $row . ':' . WorkSheetHelper::cellName($titleCount - 1) . $row);
         }
         return $row;
     }
@@ -49,7 +49,6 @@ class HeaderHandler
      * @param array $titleConfig 标题配置
      * @param int $col 当前列索引
      * @param int $row 当前行索引
-     * @param callable $cellNameFunc
      * @param int|null $titleHeight 行高
      * @param int|null $titleWidth 列宽
      * @return array ['col' => int, 'row' => int] 返回更新后的列和行
@@ -61,7 +60,6 @@ class HeaderHandler
         array $titleConfig,
         int $col,
         int $row,
-        callable $cellNameFunc,
         ?int $titleHeight = null,
         ?int $titleWidth = null
     ): array {
@@ -69,12 +67,12 @@ class HeaderHandler
             $row = $titleConfig['title_start_row'];
         }
 
-        $_merge = $cellNameFunc($col);
+        $_merge = WorkSheetHelper::cellName($col);
         foreach ($fileTitle as $key => $val) {
             if (!empty($titleHeight)) {
                 $worksheet->getRowDimension($col)->setRowHeight($titleHeight); // 行高度
             }
-            $rowName = $cellNameFunc($col);
+            $rowName = WorkSheetHelper::cellName($col);
             $worksheet->getStyle($rowName . $row)->getAlignment()->setWrapText(true); // 自动换行
             
             if (is_array($val)) {
@@ -82,12 +80,12 @@ class HeaderHandler
                 $_cols = $col;
                 foreach ($val as $k => $v) {
                     if (!isset($titleConfig['title_show']) || $titleConfig['title_show'] !== false) {
-                        $worksheet->setCellValue($cellNameFunc($_cols) . ($row + 1), $k);
+                        $worksheet->setCellValue(WorkSheetHelper::cellName($_cols) . ($row + 1), $k);
                     }
                     if (!empty($titleWidth)) {
-                        $worksheet->getColumnDimension($cellNameFunc($_cols))->setWidth($titleWidth); // 列宽度
+                        $worksheet->getColumnDimension(WorkSheetHelper::cellName($_cols))->setWidth($titleWidth); // 列宽度
                     } else {
-                        $worksheet->getColumnDimension($cellNameFunc($_cols))->setAutoSize(true); // 自动计算宽度
+                        $worksheet->getColumnDimension(WorkSheetHelper::cellName($_cols))->setAutoSize(true); // 自动计算宽度
                     }
                     if ($num < count($val)) {
                         $col++;
@@ -95,7 +93,7 @@ class HeaderHandler
                     }
                     $_cols++;
                 }
-                $worksheet->mergeCells($_merge . $row . ':' . $cellNameFunc($col) . $row);
+                $worksheet->mergeCells($_merge . $row . ':' . WorkSheetHelper::cellName($col) . $row);
                 if (!isset($titleConfig['title_show']) || $titleConfig['title_show'] !== false) {
                     $worksheet->setCellValue($_merge . $row, $key); // 设置值
                 }
@@ -113,7 +111,7 @@ class HeaderHandler
                 }
             }
             $col++;
-            $_merge = $cellNameFunc($col);
+            $_merge = WorkSheetHelper::cellName($col);
         }
         $row += $titleRow; // 当前行数
         

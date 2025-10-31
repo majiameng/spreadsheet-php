@@ -130,8 +130,6 @@ $complexFormat = function($sheet) {
     $sheet->getStyle('A13')->getFont()->setSize(10)->getColor()->setRGB('888888');
     $sheet->getStyle('A13')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
-    // 合并A11到B11
-    $sheet->mergeCells('A11:B11');
     // 设置A1字体加粗、字号14、红色（演示，实际A1已设置16号字）
     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FF0000');
     // 设置A2:E2背景色

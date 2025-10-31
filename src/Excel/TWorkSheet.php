@@ -7,7 +7,12 @@
  */
 namespace tinymeng\spreadsheet\Excel;
 
-use PhpOffice\PhpSpreadsheet\Cell\DataType;
+use tinymeng\spreadsheet\Excel\Handler\CellValueHandler;
+use tinymeng\spreadsheet\Excel\Handler\DataValidationHandler;
+use tinymeng\spreadsheet\Excel\Handler\GroupHandler;
+use tinymeng\spreadsheet\Excel\Handler\HeaderHandler;
+use tinymeng\spreadsheet\Excel\Handler\MergeHandler;
+use tinymeng\spreadsheet\Excel\Handler\StyleHandler;
 use tinymeng\spreadsheet\Util\ConstCode;
 use tinymeng\tools\exception\StatusCode;
 use tinymeng\tools\exception\TinymengException;
@@ -101,50 +106,6 @@ trait TWorkSheet{
     private $columnValidations = [];
 
     /**
-     * 获取 cellName 闭包函数
-     * @return callable
-     */
-    private function getCellNameFunc(): callable
-    {
-        return function($index) {
-            return $this->cellName($index);
-        };
-    }
-
-    /**
-     * 获取 formatValue 闭包函数
-     * @return callable
-     */
-    private function getFormatValueFunc(): callable
-    {
-        return function($value) {
-            return $this->formatValue($value);
-        };
-    }
-
-    /**
-     * 获取 verifyFile 闭包函数
-     * @return callable
-     */
-    private function getVerifyFileFunc(): callable
-    {
-        return function($path) {
-            return $this->verifyFile($path);
-        };
-    }
-
-    /**
-     * 获取 excelSetCellValue 闭包函数
-     * @return callable
-     */
-    private function getExcelSetCellValueFunc(): callable
-    {
-        return function($val) {
-            return $this->excelSetCellValue($val);
-        };
-    }
-
-    /**
      * @param $data
      * @return $this
      */
@@ -222,7 +183,7 @@ trait TWorkSheet{
 
         /** 设置第一行格式 */
         if(!empty($this->mainTitle)){
-            HeaderHandler::setHeader($this->workSheet, $this->mainTitle, $this->fileTitle, $this->getCellNameFunc());
+            HeaderHandler::setHeader($this->workSheet, $this->mainTitle, $this->fileTitle);
             $this->_row++; // 当前行数
         }
 
@@ -234,7 +195,6 @@ trait TWorkSheet{
             $this->titleConfig,
             $this->_col,
             $this->_row,
-            $this->getCellNameFunc(),
             $this->titleHeight ?? null,
             $this->titleWidth ?? null
         );
@@ -260,8 +220,7 @@ trait TWorkSheet{
             $this->workSheet,
             $this->sheetStyle,
             $this->field,
-            $this->_row - 1,
-            $this->getCellNameFunc()
+            $this->_row - 1
         );
         // 新增：应用数据验证（如果没有数据也要应用，用于导出模板）
         if (!empty($this->columnValidations) && empty($this->data)) {
@@ -298,8 +257,7 @@ trait TWorkSheet{
                     $this->mergeColumns,
                     $this->field,
                     $rowStart,
-                    $this->_row - 1,
-                    $this->getCellNameFunc()
+                    $this->_row - 1
                 );
             }
             // 新增：应用数据验证（无分组情况）
@@ -320,8 +278,9 @@ trait TWorkSheet{
                     $this->field,
                     $this->mergeColumns,
                     $this->_row,
-                    $this->getCellNameFunc(),
-                    $this->getExcelSetCellValueFunc()
+                    function($val) {
+                        return $this->excelSetCellValue($val);
+                    }
                 );
                 // 新增：应用数据验证（分组情况1级）
                 if (!empty($this->columnValidations)) {
@@ -342,8 +301,9 @@ trait TWorkSheet{
                     $this->field,
                     $this->mergeColumns,
                     $this->_row,
-                    $this->getCellNameFunc(),
-                    $this->getExcelSetCellValueFunc()
+                    function($val) {
+                        return $this->excelSetCellValue($val);
+                    }
                 );
                 // 新增：应用数据验证（分组情况2级）
                 if (!empty($this->columnValidations)) {
@@ -371,11 +331,10 @@ trait TWorkSheet{
             $this->field,
             $this->_row,
             $this->title_row ?? 1,
-            $this->getCellNameFunc(),
-            $this->getFormatValueFunc(),
-            $this->getVerifyFileFunc(),
             $this->height ?? null,
-            $this->autoDataType ?? false
+            $this->autoDataType ?? false,
+            $this->format ?? true,
+            $this->format_date ?? 'Y-m-d H:i:s'
         );
     }
 
@@ -460,7 +419,6 @@ trait TWorkSheet{
             $fieldIndex,
             $startRow,
             $endRow,
-            $this->getCellNameFunc(),
             empty($this->data)
         );
     }

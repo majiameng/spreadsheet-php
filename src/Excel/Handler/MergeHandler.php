@@ -5,9 +5,10 @@
  * @file: MergeHandler.php
  * @Date: 2025/01/XX
  */
-namespace tinymeng\spreadsheet\Excel;
+namespace tinymeng\spreadsheet\Excel\Handler;
 
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use tinymeng\spreadsheet\Util\WorkSheetHelper;
 
 class MergeHandler
 {
@@ -18,15 +19,13 @@ class MergeHandler
      * @param array $fields 所有字段列表
      * @param int $rowStart 数据起始行
      * @param int $rowEnd 数据结束行
-     * @param callable $cellNameFunc 获取列字母的函数
      */
     public static function autoMergeColumns(
         Worksheet $worksheet,
         array $mergeColumns,
         array $fields,
         int $rowStart,
-        int $rowEnd,
-        callable $cellNameFunc
+        int $rowEnd
     ) {
         if ($rowEnd <= $rowStart) return;
         
@@ -34,7 +33,7 @@ class MergeHandler
             $colIdx = array_search($fieldName, $fields);
             if ($colIdx === false) continue;
             
-            $colLetter = $cellNameFunc($colIdx);
+            $colLetter = WorkSheetHelper::cellName($colIdx);
             $lastValue = null;
             $mergeStart = $rowStart;
             

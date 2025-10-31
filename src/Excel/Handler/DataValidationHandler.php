@@ -5,10 +5,11 @@
  * @file: DataValidationHandler.php
  * @Date: 2025/01/XX
  */
-namespace tinymeng\spreadsheet\Excel;
+namespace tinymeng\spreadsheet\Excel\Handler;
 
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use tinymeng\spreadsheet\Util\WorkSheetHelper;
 
 class DataValidationHandler
 {
@@ -20,7 +21,6 @@ class DataValidationHandler
      * @param int $fieldIndex 字段在field数组中的索引
      * @param int $startRow 起始行（数据开始行）
      * @param int $endRow 结束行（数据结束行，为0时表示应用到整列）
-     * @param callable $cellNameFunc 获取列字母的函数
      * @param bool $isTemplate 是否为模板（无数据）
      */
     public static function applyValidation(
@@ -30,10 +30,9 @@ class DataValidationHandler
         int $fieldIndex,
         int $startRow,
         int $endRow = 0,
-        callable $cellNameFunc,
         bool $isTemplate = false
     ) {
-        $colLetter = $cellNameFunc($fieldIndex);
+        $colLetter = WorkSheetHelper::cellName($fieldIndex);
 
         // 创建数据验证对象
         $validation = new DataValidation();

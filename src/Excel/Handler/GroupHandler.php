@@ -5,9 +5,10 @@
  * @file: GroupHandler.php
  * @Date: 2025/01/XX
  */
-namespace tinymeng\spreadsheet\Excel;
+namespace tinymeng\spreadsheet\Excel\Handler;
 
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use tinymeng\spreadsheet\Util\WorkSheetHelper;
 use tinymeng\tools\exception\StatusCode;
 use tinymeng\tools\exception\TinymengException;
 
@@ -22,8 +23,7 @@ class GroupHandler
      * @param array $fields 所有字段列表
      * @param array $mergeColumns 需要合并的列
      * @param int $row 当前行
-     * @param callable $cellNameFunc 获取列字母的函数
-     * @param callable $setCellValueFunc 设置单元格值的函数
+     * @param callable $setCellValueFunc 设置单元格值的函数（用于递归调用）
      * @return int 返回更新后的行号
      */
     public static function processGroupLeft(
@@ -34,7 +34,6 @@ class GroupHandler
         array $fields,
         array $mergeColumns,
         int $row,
-        callable $cellNameFunc,
         callable $setCellValueFunc
     ): int {
         // 获取分组字段在field中的实际位置
@@ -53,7 +52,7 @@ class GroupHandler
         $group_start = $row;
         foreach ($data as $key => $val) {
             // 第一级分组的合并单元格
-            $rowName = $cellNameFunc($group_field_positions[0]); // 使用第一个分组字段的实际位置
+            $rowName = WorkSheetHelper::cellName($group_field_positions[0]); // 使用第一个分组字段的实际位置
             $coordinate = $rowName . $row . ':' . $rowName . ($row + $val['count'] - 1);
             $worksheet->mergeCells($coordinate);
             $worksheet->setCellValue($rowName . $row, $key);
@@ -65,7 +64,7 @@ class GroupHandler
                     if (in_array($field, $groupLeft)) continue;
                     $colIdx = array_search($field, $fields);
                     if ($colIdx !== false) {
-                        $colLetter = $cellNameFunc($colIdx);
+                        $colLetter = WorkSheetHelper::cellName($colIdx);
                         $worksheet->mergeCells($colLetter . $row . ':' . $colLetter . ($row + $val['count'] - 1));
                         // 取本组第一个数据的值
                         $worksheet->setCellValue($colLetter . $row, $val['data'][0][$field] ?? '');
@@ -79,7 +78,7 @@ class GroupHandler
                 }
             } else {
                 $sub_group_start = $row;
-                $rowName = $cellNameFunc($group_field_positions[1]); // 使用第二个分组字段的实际位置
+                $rowName = WorkSheetHelper::cellName($group_field_positions[1]); // 使用第二个分组字段的实际位置
 
                 foreach ($val['data'] as $k => $v) {
                     $coordinate = $rowName . $sub_group_start . ':' . $rowName . ($sub_group_start + $v['count'] - 1);
