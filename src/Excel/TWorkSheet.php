@@ -101,6 +101,50 @@ trait TWorkSheet{
     private $columnValidations = [];
 
     /**
+     * 获取 cellName 闭包函数
+     * @return callable
+     */
+    private function getCellNameFunc(): callable
+    {
+        return function($index) {
+            return $this->cellName($index);
+        };
+    }
+
+    /**
+     * 获取 formatValue 闭包函数
+     * @return callable
+     */
+    private function getFormatValueFunc(): callable
+    {
+        return function($value) {
+            return $this->formatValue($value);
+        };
+    }
+
+    /**
+     * 获取 verifyFile 闭包函数
+     * @return callable
+     */
+    private function getVerifyFileFunc(): callable
+    {
+        return function($path) {
+            return $this->verifyFile($path);
+        };
+    }
+
+    /**
+     * 获取 excelSetCellValue 闭包函数
+     * @return callable
+     */
+    private function getExcelSetCellValueFunc(): callable
+    {
+        return function($val) {
+            return $this->excelSetCellValue($val);
+        };
+    }
+
+    /**
      * @param $data
      * @return $this
      */
@@ -178,12 +222,24 @@ trait TWorkSheet{
 
         /** 设置第一行格式 */
         if(!empty($this->mainTitle)){
-            $this->excelHeader();
-            $this->_row ++;//当前行数
+            HeaderHandler::setHeader($this->workSheet, $this->mainTitle, $this->fileTitle, $this->getCellNameFunc());
+            $this->_row++; // 当前行数
         }
 
         /** 设置表头 **/
-        $this->excelTitle();
+        $result = HeaderHandler::setTitle(
+            $this->workSheet,
+            $this->fileTitle,
+            $this->title_row ?? 1,
+            $this->titleConfig,
+            $this->_col,
+            $this->_row,
+            $this->getCellNameFunc(),
+            $this->titleHeight ?? null,
+            $this->titleWidth ?? null
+        );
+        $this->_col = $result['col'];
+        $this->_row = $result['row'];
 
         /** 获取列表里所有字段 **/
         foreach ($this->fileTitle as $key => $val){
@@ -200,7 +256,13 @@ trait TWorkSheet{
             $this->excelSetValue();
         }
         // 新增：应用全表样式
-        $this->applySheetStyle();
+        StyleHandler::applySheetStyle(
+            $this->workSheet,
+            $this->sheetStyle,
+            $this->field,
+            $this->_row - 1,
+            $this->getCellNameFunc()
+        );
         // 新增：应用数据验证（如果没有数据也要应用，用于导出模板）
         if (!empty($this->columnValidations) && empty($this->data)) {
             // 确定数据起始行
@@ -231,7 +293,14 @@ trait TWorkSheet{
             }
             // 新增：处理mergeColumns自动合并
             if (!empty($this->mergeColumns)) {
-                $this->autoMergeColumns($rowStart, $this->_row - 1);
+                MergeHandler::autoMergeColumns(
+                    $this->workSheet,
+                    $this->mergeColumns,
+                    $this->field,
+                    $rowStart,
+                    $this->_row - 1,
+                    $this->getCellNameFunc()
+                );
             }
             // 新增：应用数据验证（无分组情况）
             if (!empty($this->columnValidations)) {
@@ -239,35 +308,43 @@ trait TWorkSheet{
             }
         }else{   //根据设置分组字段进行分组
             /** 数据分组 **/
-            $data = [];
             $group_left_count = count($this->group_left);
             if($group_left_count == 1){
-                foreach ($this->data as $k => $v){
-                    if(isset($v[$this->group_left[0]])){
-                        $data[$v[$this->group_left[0]]][] = $v;
-                    }
-                }
-                foreach ($data as $k =>$v){
-                    $data[$k] = [
-                        'data' => $v,
-                        'count' => count($v)
-                    ];
-                }
+                $data = GroupHandler::groupDataByOneField($this->data, $this->group_left[0]);
                 $rowStart = $this->_row;
-                $this->excelGroupLeft($data, $group_left_count);
+                $this->_row = GroupHandler::processGroupLeft(
+                    $this->workSheet,
+                    $data,
+                    $group_left_count,
+                    $this->group_left,
+                    $this->field,
+                    $this->mergeColumns,
+                    $this->_row,
+                    $this->getCellNameFunc(),
+                    $this->getExcelSetCellValueFunc()
+                );
                 // 新增：应用数据验证（分组情况1级）
                 if (!empty($this->columnValidations)) {
                     $this->applyAllColumnValidations($rowStart, $this->_row - 1);
                 }
             }elseif($group_left_count == 2){
-                foreach ($this->data as $v) {
-                    if(isset($v[$this->group_left[0]]) && isset($v[$this->group_left[1]])){
-                        $data[$v[$this->group_left[0]]][$v[$this->group_left[1]]][] = $v;
-                    }
-                }
-                $this->data = $this->arrayCount($data);
+                $this->data = GroupHandler::groupDataByTwoFields(
+                    $this->data,
+                    $this->group_left[0],
+                    $this->group_left[1]
+                );
                 $rowStart = $this->_row;
-                $this->excelGroupLeft($this->data, $group_left_count);
+                $this->_row = GroupHandler::processGroupLeft(
+                    $this->workSheet,
+                    $this->data,
+                    $group_left_count,
+                    $this->group_left,
+                    $this->field,
+                    $this->mergeColumns,
+                    $this->_row,
+                    $this->getCellNameFunc(),
+                    $this->getExcelSetCellValueFunc()
+                );
                 // 新增：应用数据验证（分组情况2级）
                 if (!empty($this->columnValidations)) {
                     $this->applyAllColumnValidations($rowStart, $this->_row - 1);
@@ -280,86 +357,6 @@ trait TWorkSheet{
         }
     }
 
-    /**
-     * @return void
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     */
-    public function excelHeader(){
-        $row = 1;
-        if(!empty($this->mainTitle)){
-            $this->workSheet->setCellValue('A'.$row, $this->mainTitle);
-        }
-
-        // 计算实际的标题列数
-        $titleCount = 0;
-        foreach ($this->fileTitle as $val) {
-            if (is_array($val)) {
-                $titleCount += count($val); // 如果是数组，加上子项的数量
-            } else {
-                $titleCount++; // 如果是单个标题，加1
-            }
-        }
-
-        // 使用实际的标题列数来合并单元格
-        $this->workSheet->mergeCells('A'.$row.':'.$this->cellName($titleCount-1).$row);
-    }
-
-    /**
-     * @return void
-     * @throws \PhpOffice\PhpSpreadsheet\Exception
-     */
-    private function excelTitle(){
-        if(!empty($this->titleConfig['title_start_row'])){
-            $this->_row = $this->titleConfig['title_start_row'];
-        }
-
-        $_merge = $this->cellName($this->_col);
-        foreach ($this->fileTitle as $key => $val) {
-            if(!empty($this->titleHeight)) {
-                $this->workSheet->getRowDimension($this->_col)->setRowHeight($this->titleHeight);//行高度
-            }
-            $rowName = $this->cellName($this->_col);
-            $this->workSheet->getStyle($rowName . $this->_row)->getAlignment()->setWrapText(true);//自动换行
-            if (is_array($val)) {
-                $num = 1;
-                $_cols = $this->_col;
-                foreach ($val as $k => $v) {
-                    if(!isset($this->titleConfig['title_show']) || $this->titleConfig['title_show']!==false) {
-                        $this->workSheet->setCellValue($this->cellName($_cols) . ($this->_row+1), $k);
-                    }
-                    if(!empty($this->titleWidth)) {
-                        $this->workSheet->getColumnDimension($this->cellName($_cols))->setWidth($this->titleWidth); //列宽度
-                    }else{
-                        $this->workSheet->getColumnDimension($this->cellName($_cols))->setAutoSize(true); //自动计算宽度
-                    }
-                    if ($num < count($val)) {
-                        $this->_col++;
-                        $num++;
-                    }
-                    $_cols++;
-                }
-                $this->workSheet->mergeCells($_merge . $this->_row.':' . $this->cellName($this->_col) .$this->_row);
-                if(!isset($this->titleConfig['title_show']) || $this->titleConfig['title_show']!==false) {
-                    $this->workSheet->setCellValue($_merge . $this->_row, $key);//设置值
-                }
-            } else {
-                if ($this->title_row != 1) {
-                    $this->workSheet->mergeCells($rowName . $this->_row.':' . $rowName . ($this->_row + $this->title_row - 1));
-                }
-                if(!isset($this->titleConfig['title_show']) || $this->titleConfig['title_show']!==false) {
-                    $this->workSheet->setCellValue($rowName . $this->_row, $key);//设置值
-                }
-                if(!empty($this->titleWidth)){
-                    $this->workSheet->getColumnDimension($rowName)->setWidth($this->titleWidth); //列宽度
-                }else{
-                    $this->workSheet->getColumnDimension($rowName)->setAutoSize(true); //自动计算宽度
-                }
-            }
-            $this->_col++;
-            $_merge = $this->cellName($this->_col);
-        }
-        $this->_row += $this->title_row;//当前行数
-    }
 
     /**
      * excel单元格赋值
@@ -368,207 +365,20 @@ trait TWorkSheet{
      */
     private function excelSetCellValue($val)
     {
-        //设置单元格行高
-        if(!empty($this->height)){
-            $this->workSheet->getRowDimension($this->_row)->setRowHeight($this->height);
-        }
-        $_lie = 0;
-        foreach ($this->field as $v){
-            $rowName = $this->cellName($_lie);
-
-            if(strpos($v,'.') !== false){
-                $v = explode('.',$v);
-                $content = $val;
-                for ($i=0;$i<count($v);$i++){
-                    $content = $content[$v[$i]]??'';
-                }
-            }elseif($v == '_id'){
-                $content = $this->_row-$this->title_row;//自增序号列
-            }else{
-                $content = ($val[$v]??'');
-            }
-            if(is_array($content) && isset($content['type']) && isset($content['content'])){
-                if($content['type'] == 'image'){
-                    $path = $this->verifyFile($content['content']);
-                    $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
-                    $drawing->setPath($path);
-                    if(!empty($content['height'])) {
-                        $drawing->setHeight($content['height']);
-                    }
-                    if(!empty($content['width'])) {
-                        $drawing->setWidth($content['width']);//只设置高，宽会自适应，如果设置宽后，高则失效
-                    }
-                    if(!empty($content['offsetX'])) {
-                        $drawing->setOffsetX($content['offsetX']);//设置X方向偏移量
-                    }
-                    if(!empty($content['offsetY'])) {
-                        $drawing->setOffsetY($content['offsetY']);//设置Y方向偏移量
-                    }
-
-                    $drawing->setCoordinates($rowName.$this->_row);
-                    $drawing->setWorksheet($this->workSheet);
-                }
-            }elseif(is_array($content) && isset($content['formula'])){
-                // 新增：支持 ['formula' => '公式'] 写法
-                $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content['formula'], \PhpOffice\PhpSpreadsheet\Cell\DataType::TYPE_FORMULA);
-            }else {
-                $content = $this->formatValue($content);//格式化数据
-                if (is_numeric($content)){
-                    if($this->autoDataType && strlen($content)<11){
-                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_NUMERIC);
-                    }else{
-                        $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
-                    }
-                }else{
-                    $this->workSheet->setCellValueExplicit($rowName.$this->_row, $content,DataType::TYPE_STRING2);
-                }
-            }
-            $_lie ++;
-        }
-        $this->_row ++;
+        $this->_row = CellValueHandler::setCellValue(
+            $this->workSheet,
+            $val,
+            $this->field,
+            $this->_row,
+            $this->title_row ?? 1,
+            $this->getCellNameFunc(),
+            $this->getFormatValueFunc(),
+            $this->getVerifyFileFunc(),
+            $this->height ?? null,
+            $this->autoDataType ?? false
+        );
     }
 
-    /**
-     * 单元格合并并赋值
-     * @param array $data 数据
-     * @param $group_left_count
-     * @author tinymeng
-     */
-    private function excelGroupLeft(array $data, $group_left_count)
-    {
-        // 获取分组字段在field中的实际位置
-        $group_field_positions = [];
-        foreach($this->group_left as $group_field){
-            $position = array_search($group_field, $this->field);
-            if($position !== false){
-                $group_field_positions[] = $position;
-            }
-        }
-
-        if(empty($group_field_positions)){
-            throw new TinymengException(StatusCode::COMMON_PARAM_INVALID, '分组字段未在标题中定义');
-        }
-
-        $group_start = $this->_row;
-        foreach ($data as $key => $val){
-            // 第一级分组的合并单元格
-            $rowName = $this->cellName($group_field_positions[0]); // 使用第一个分组字段的实际位置
-            $coordinate = $rowName.$this->_row.':'.$rowName.($this->_row+$val['count']-1);
-            $this->workSheet->mergeCells($coordinate);
-            $this->workSheet->setCellValue($rowName.$this->_row, $key);
-
-            // 新增：合并mergeColumns指定的其它列
-            if (!empty($this->mergeColumns)) {
-                foreach ($this->mergeColumns as $field) {
-                    // 跳过分组字段本身
-                    if (in_array($field, $this->group_left)) continue;
-                    $colIdx = array_search($field, $this->field);
-                    if ($colIdx !== false) {
-                        $colLetter = $this->cellName($colIdx);
-                        $this->workSheet->mergeCells($colLetter.$this->_row.':'.$colLetter.($this->_row+$val['count']-1));
-                        // 取本组第一个数据的值
-                        $this->workSheet->setCellValue($colLetter.$this->_row, $val['data'][0][$field] ?? '');
-                    }
-                }
-            }
-
-            if($group_left_count == 1){
-                foreach ($val['data'] as $dataRow){
-                    $this->excelSetCellValue($dataRow);
-                }
-            }else{
-                $sub_group_start = $this->_row;
-                $rowName = $this->cellName($group_field_positions[1]); // 使用第二个分组字段的实际位置
-
-                foreach ($val['data'] as $k => $v){
-                    $coordinate = $rowName.$sub_group_start.':'.$rowName.($sub_group_start+$v['count']-1);
-                    $this->workSheet->mergeCells($coordinate);
-                    $this->workSheet->setCellValue($rowName.$sub_group_start, $k);
-
-                    foreach ($v['data'] as $data){
-                        $this->excelSetCellValue($data);
-                    }
-
-                    $sub_group_start = $sub_group_start + $v['count'];
-                }
-            }
-
-            $this->_row = $group_start + $val['count'];
-            $group_start = $this->_row;
-        }
-    }
-
-    /**
-     * 二位数组获取每一级别数量
-     * @author tinymeng
-     * @param array $data 二维数组原始数据
-     * @return array
-     */
-    private function arrayCount($data=[])
-    {
-        foreach ($data as $key => $val){
-            $num = 0;
-            foreach ($val as $k => $v){
-                $sub_num = count($v);
-                $num = $num+$sub_num;
-                $val[$k] = [
-                    'count' => $sub_num,
-                    'data' => $v
-                ];
-            }
-            $data[$key] = [
-                'count' => $num,
-                'data' => $val
-            ];
-        }
-        return $data;
-    }
-
-    /**
-     * 自动合并指定字段相同值的单元格
-     * @param int $rowStart 数据起始行
-     * @param int $rowEnd 数据结束行
-     */
-    private function autoMergeColumns($rowStart, $rowEnd)
-    {
-        if ($rowEnd <= $rowStart) return;
-        foreach ($this->mergeColumns as $fieldName) {
-            $colIdx = array_search($fieldName, $this->field);
-            if ($colIdx === false) continue;
-            $colLetter = $this->cellName($colIdx);
-            $lastValue = null;
-            $mergeStart = $rowStart;
-            for ($row = $rowStart; $row <= $rowEnd; $row++) {
-                $cellValue = $this->workSheet->getCell($colLetter . $row)->getValue();
-                if ($lastValue !== null && $cellValue !== $lastValue) {
-                    if ($row - $mergeStart > 1) {
-                        $this->workSheet->mergeCells($colLetter . $mergeStart . ':' . $colLetter . ($row - 1));
-                    }
-                    $mergeStart = $row;
-                }
-                $lastValue = $cellValue;
-            }
-            // 处理最后一组
-            if ($rowEnd - $mergeStart + 1 > 1) {
-                $this->workSheet->mergeCells($colLetter . $mergeStart . ':' . $colLetter . $rowEnd);
-            }
-        }
-    }
-
-    /**
-     * 应用全表样式
-     */
-    private function applySheetStyle()
-    {
-        if (empty($this->sheetStyle)) return;
-        // 计算数据区范围
-        $startCol = 'A';
-        $endCol = $this->cellName(count($this->field) - 1);
-        $startRow = 1;
-        $endRow = $this->_row - 1;
-        $cellRange = $startCol . $startRow . ':' . $endCol . $endRow;
-        $this->workSheet->getStyle($cellRange)->applyFromArray($this->sheetStyle);
-    }
 
     /**
      * 设置自定义表格操作回调
@@ -641,177 +451,18 @@ trait TWorkSheet{
         }
 
         $config = $this->columnValidations[$fieldName];
-        $colLetter = $this->cellName($fieldIndex);
 
-        // 创建数据验证对象
-        $validation = new \PhpOffice\PhpSpreadsheet\Cell\DataValidation();
-        
-        // 设置验证类型
-        $type = $config['type'] ?? 'list';
-        switch ($type) {
-            case 'list':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_LIST);
-                if (isset($config['options']) && is_array($config['options'])) {
-                    // 选项列表，使用逗号分隔，需要转义包含逗号的选项
-                    $options = array_map(function($option) {
-                        // 如果选项包含逗号或引号，需要用引号包裹并转义内部引号
-                        if (strpos($option, ',') !== false || strpos($option, '"') !== false) {
-                            return '"' . str_replace('"', '""', $option) . '"';
-                        }
-                        return $option;
-                    }, $config['options']);
-                    $formula = '"' . implode(',', $options) . '"';
-                    $validation->setFormula1($formula);
-                } elseif (isset($config['formula'])) {
-                    // 使用公式引用范围（如 "=$A$1:$A$10"）
-                    $validation->setFormula1($config['formula']);
-                }
-                // 是否显示下拉箭头
-                $validation->setShowDropDown(!isset($config['showDropDown']) || $config['showDropDown'] !== false);
-                break;
-            case 'whole':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_WHOLE);
-                break;
-            case 'decimal':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_DECIMAL);
-                break;
-            case 'date':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_DATE);
-                break;
-            case 'time':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_TIME);
-                break;
-            case 'textLength':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_TEXTLENGTH);
-                break;
-            case 'custom':
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_CUSTOM);
-                if (isset($config['formula'])) {
-                    $validation->setFormula1($config['formula']);
-                }
-                break;
-            default:
-                $validation->setType(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::TYPE_NONE);
-        }
-
-        // 设置操作符和范围（对于数值、日期、时间类型）
-        if (in_array($type, ['whole', 'decimal', 'date', 'time', 'textLength'])) {
-            $operator = $config['operator'] ?? 'between';
-            switch ($operator) {
-                case 'between':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_BETWEEN);
-                    if (isset($config['min'])) {
-                        $validation->setFormula1($config['min']);
-                    }
-                    if (isset($config['max'])) {
-                        $validation->setFormula2($config['max']);
-                    }
-                    break;
-                case 'notBetween':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_NOTBETWEEN);
-                    if (isset($config['min'])) {
-                        $validation->setFormula1($config['min']);
-                    }
-                    if (isset($config['max'])) {
-                        $validation->setFormula2($config['max']);
-                    }
-                    break;
-                case 'equal':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_EQUAL);
-                    if (isset($config['value'])) {
-                        $validation->setFormula1($config['value']);
-                    }
-                    break;
-                case 'notEqual':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_NOTEQUAL);
-                    if (isset($config['value'])) {
-                        $validation->setFormula1($config['value']);
-                    }
-                    break;
-                case 'greaterThan':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_GREATERTHAN);
-                    if (isset($config['value'])) {
-                        $validation->setFormula1($config['value']);
-                    }
-                    break;
-                case 'lessThan':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_LESSTHAN);
-                    if (isset($config['value'])) {
-                        $validation->setFormula1($config['value']);
-                    }
-                    break;
-                case 'greaterThanOrEqual':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_GREATERTHANOREQUAL);
-                    if (isset($config['value'])) {
-                        $validation->setFormula1($config['value']);
-                    }
-                    break;
-                case 'lessThanOrEqual':
-                    $validation->setOperator(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::OPERATOR_LESSTHANOREQUAL);
-                    if (isset($config['value'])) {
-                        $validation->setFormula1($config['value']);
-                    }
-                    break;
-            }
-        }
-
-        // 设置输入提示信息
-        if (isset($config['promptTitle']) || isset($config['promptMessage'])) {
-            $validation->setPromptTitle($config['promptTitle'] ?? '');
-            $validation->setPrompt($config['promptMessage'] ?? '');
-            $validation->setShowInputMessage(isset($config['showInputMessage']) ? $config['showInputMessage'] : true);
-        }
-
-        // 设置错误提示信息
-        if (isset($config['errorTitle']) || isset($config['errorMessage'])) {
-            $validation->setErrorTitle($config['errorTitle'] ?? '输入错误');
-            $validation->setError($config['errorMessage'] ?? '输入值无效');
-            
-            // 设置错误样式
-            $errorStyle = $config['errorStyle'] ?? 'stop';
-            switch ($errorStyle) {
-                case 'stop':
-                    $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP);
-                    break;
-                case 'warning':
-                    $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_WARNING);
-                    break;
-                case 'information':
-                    $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_INFORMATION);
-                    break;
-                default:
-                    $validation->setErrorStyle(\PhpOffice\PhpSpreadsheet\Cell\DataValidation::STYLE_STOP);
-            }
-            
-            $validation->setShowErrorMessage(isset($config['showErrorMessage']) ? $config['showErrorMessage'] : true);
-        }
-
-        // 是否允许空白
-        $validation->setAllowBlank(isset($config['allowBlank']) ? $config['allowBlank'] : false);
-
-        // 确定结束行：优先使用配置中的行范围
-        $finalEndRow = $endRow;
-        if (isset($config['data_end_row']) && $config['data_end_row'] > 0) {
-            // 配置中直接指定了结束行
-            $finalEndRow = $config['data_end_row'];
-        } elseif (isset($config['data_row_count']) && $config['data_row_count'] > 0) {
-            // 配置中指定了行数（从起始行开始计算）
-            $finalEndRow = $startRow + $config['data_row_count'];
-        } elseif ($endRow == 0 && empty($this->data)) {
-            // 模板导出时，如果没有配置行范围，默认应用到后续100行
-            $finalEndRow = $startRow + 100;
-        }
-
-        // 应用验证到指定范围
-        if ($finalEndRow > 0 && $finalEndRow >= $startRow) {
-            // 应用到指定行范围
-            $cellRange = $colLetter . $startRow . ':' . $colLetter . $finalEndRow;
-        } else {
-            // 应用到整列（从数据开始行到工作表最后一行）
-            $cellRange = $colLetter . $startRow . ':' . $colLetter . $this->workSheet->getHighestRow();
-        }
-
-        $this->workSheet->setDataValidation($cellRange, $validation);
+        // 使用 DataValidationHandler 处理验证
+        DataValidationHandler::applyValidation(
+            $this->workSheet,
+            $fieldName,
+            $config,
+            $fieldIndex,
+            $startRow,
+            $endRow,
+            $this->getCellNameFunc(),
+            empty($this->data)
+        );
     }
 
     /**

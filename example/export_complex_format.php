@@ -125,17 +125,17 @@ $complexFormat = function($sheet) {
     $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
     // 第2行：导出时间
-    $sheet->mergeCells('A2:E2');
-    $sheet->setCellValue('A2', '导出时间：' . date('Y-m-d'));
-    $sheet->getStyle('A2')->getFont()->setSize(10)->getColor()->setRGB('888888');
-    $sheet->getStyle('A2')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+    $sheet->mergeCells('A13:E13');
+    $sheet->setCellValue('A13', '导出时间：' . date('Y-m-d'));
+    $sheet->getStyle('A13')->getFont()->setSize(10)->getColor()->setRGB('888888');
+    $sheet->getStyle('A13')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
 
     // 合并A11到B11
     $sheet->mergeCells('A11:B11');
     // 设置A1字体加粗、字号14、红色（演示，实际A1已设置16号字）
     $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB('FF0000');
     // 设置A2:E2背景色
-    $sheet->getStyle('A2:E2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+    $sheet->getStyle('A13:E13')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
         ->getStartColor()->setRGB('FFFFCC');
     // 你可以继续添加更多自定义操作
 };
