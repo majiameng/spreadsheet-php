@@ -215,6 +215,14 @@ trait TWorkSheet{
         if(!empty($this->data)){
             $this->excelSetValue();
         }
+        // 读取样式配置
+        if (!empty($this->config['subtotalStyle'])) {
+            $this->subtotalStyle = $this->config['subtotalStyle'];
+        }
+        if (!empty($this->config['sheetStyle'])) {
+            $this->sheetStyle = $this->config['sheetStyle'];
+        }
+
         // 新增：应用全表样式
         StyleHandler::applySheetStyle(
             $this->workSheet,
