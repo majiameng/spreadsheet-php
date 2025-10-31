@@ -149,6 +149,41 @@ $path = $TSpreadSheet->generate()->save($filename);
 echo '生成excel路径：'.$path;exit();
 //生成excel路径：E:\spreadsheet-php\example\public\export\20240402\export_demo_2024-04-02_351.xlsx
 ```
+
+设置数据有效性
+```
+// 示例1：设置下拉列表
+$spreadsheet->setColumnValidation('status', [
+    'type' => 'list',
+    'options' => ['待审核', '已审核', '已拒绝'],
+    'promptTitle' => '状态选择',
+    'promptMessage' => '请从下拉列表中选择状态',
+    'errorTitle' => '输入错误',
+    'errorMessage' => '只能从下拉列表中选择',
+    'showDropDown' => true
+]);
+
+// 示例2：设置整数范围验证
+$spreadsheet->setColumnValidation('age', [
+    'type' => 'whole',
+    'operator' => 'between',
+    'min' => 0,
+    'max' => 150,
+    'promptTitle' => '年龄输入',
+    'promptMessage' => '请输入0-150之间的整数',
+    'errorTitle' => '输入错误',
+    'errorMessage' => '年龄必须在0-150之间',
+    'errorStyle' => 'stop'
+]);
+
+// 示例3：批量设置
+$spreadsheet->setColumnValidations([
+    'status' => ['type' => 'list', 'options' => [...]],
+    'age' => ['type' => 'whole', 'operator' => 'between', 'min' => 0, 'max' => 150]
+]);
+```
+
+
 这样直接输出到浏览器中下载
 ```
 $TSpreadSheet->generate()->download($filename);
