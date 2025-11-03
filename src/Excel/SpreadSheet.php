@@ -1,6 +1,6 @@
 <?php
 /**
- * @name: TWorklSheet
+ * @name: SpreadSheet
  * @author: JiaMeng <666@majiameng.com>
  * @file: Export.php
  * @Date: 2024/03/04 10:15
@@ -116,8 +116,8 @@ trait SpreadSheet{
 
     /**
      * getExcelData
-     * @param $this->title_fields
      * @return array
+     * @throws Exception
      * @author: Tinymeng <666@majiameng.com>
      * @time: 2022/2/22 11:30
      */
@@ -146,13 +146,13 @@ trait SpreadSheet{
          * 读取表格图片数据
          * (如果为空右击图片转为浮动图片)
          */
-        $image_filename_prefix = time().rand(100,999).$this->sheet;
+        $imageFilename_prefix = time().rand(100,999).$this->sheet;
         foreach ($this->workSheet->getDrawingCollection() as $drawing) {
             /**@var $drawing Drawing* */
             list($column, $row) = Coordinate::coordinateFromString($drawing->getCoordinates());
-            $image_filename = "/{$image_filename_prefix}-" . $drawing->getCoordinates();
-            $image_suffix = $this->saveImage($drawing, $image_filename);
-            $image_name = ltrim($this->relative_path, '/') . "{$image_filename}.{$image_suffix}";
+            $imageFilename = "/{$imageFilename_prefix}-" . $drawing->getCoordinates();
+            $image_suffix = $this->saveImage($drawing, $imageFilename);
+            $image_name = ltrim($this->relative_path, '/') . "{$imageFilename}.{$image_suffix}";
             if(isset($this->title_fields[$column])) {
                 $result[$row-($this->titleFieldsRow+1)][$this->title_fields[$column]] = $image_name;
             }
@@ -172,7 +172,7 @@ trait SpreadSheet{
 
     /**
      * getTitleFields
-     * @return array
+     * @return SpreadSheet
      * @author: Tinymeng <666@majiameng.com>
      * @time: 2022/2/22 11:30
      */
@@ -184,14 +184,17 @@ trait SpreadSheet{
 
         foreach ($this->cellName as $column){
             $value = trim($this->workSheet->getCell($column.$row)->getValue());
-            if(!empty($value)){
-                $titleDataArr[$value] = $column;
+            // 规范化表头：移除前导星号（半角/全角）与多余空白
+            $norm = $this->normalizeHeaderName($value);
+            if(!empty($norm)){
+                $titleDataArr[$norm] = $column;
             }
         }
         $title_fields = [];
         foreach ($title as $key=>$value) {
-            if(isset($titleDataArr[$key])){
-                $title_fields[$titleDataArr[$key]] = $value;
+            $normKey = $this->normalizeHeaderName($key);
+            if(isset($titleDataArr[$normKey])){
+                $title_fields[$titleDataArr[$normKey]] = $value;
             }
         }
         $this->title_fields = $title_fields;
@@ -199,48 +202,64 @@ trait SpreadSheet{
     }
 
     /**
+     * 规范化表头显示名称：
+     * - 去掉前导的 * 或 ＊，以及其后的空格
+     * - 去掉首尾空白
+     * @param $name
+     * @return mixed|string
+     */
+    private function normalizeHeaderName($name){
+        $name = is_string($name) ? trim($name) : $name;
+        if(!is_string($name)) return $name;
+        // 移除一个或多个半角/全角星号以及紧随的空格
+        $name = preg_replace('/^[\x{002A}\x{FF0A}]+\s*/u', '', $name);
+        // 再次trim以防有残余空白
+        return trim($name);
+    }
+
+    /**
      * 保存图片到文件相对路径
      * @param Drawing $drawing
-     * @param $image_filename
+     * @param $imageFilename
      * @return string
      * @throws Exception
      */
-    protected function saveImage(Drawing $drawing, $image_filename)
+    protected function saveImage(Drawing $drawing, $imageFilename)
     {
         FileTool::mkdir($this->image_path);
 
         // 获取文件的真实MIME类型
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mime_type = $finfo->file($drawing->getPath());
+        $fInfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimeType = $fInfo->file($drawing->getPath());
 
         // 根据MIME类型确定真实的图片格式
-        switch ($mime_type) {
+        switch ($mimeType) {
             case 'image/jpg':
             case 'image/jpeg':
-                $real_extension = 'jpg';
-                $image_filename .= '.'.$real_extension;
+                $realExtension = 'jpg';
+                $imageFilename .= '.'.$realExtension;
                 $source = imagecreatefromjpeg($drawing->getPath());
-                imagejpeg($source, $this->image_path . $image_filename);
+                imagejpeg($source, $this->image_path . $imageFilename);
                 break;
             case 'image/gif':
-                $real_extension = 'gif';
-                $image_filename .= '.'.$real_extension;
+                $realExtension = 'gif';
+                $imageFilename .= '.'.$realExtension;
                 $source = imagecreatefromgif($drawing->getPath());
-                imagegif($source, $this->image_path . $image_filename);
+                imagegif($source, $this->image_path . $imageFilename);
                 break;
             case 'image/png':
-                $real_extension = 'png';
-                $image_filename .= '.'.$real_extension;
+                $realExtension = 'png';
+                $imageFilename .= '.'.$realExtension;
                 $source = imagecreatefrompng($drawing->getPath());
                 // 保持透明度设置
                 imagealphablending($source, false);
                 imagesavealpha($source, true);
-                imagepng($source, $this->image_path . $image_filename);
+                imagepng($source, $this->image_path . $imageFilename);
                 break;
             default:
                 throw new Exception('image format error!');
         }
 
-        return $real_extension;
+        return $realExtension;
     }
 }

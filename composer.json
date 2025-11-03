@@ -25,5 +25,7 @@
             "tinymeng\\spreadsheet\\": "src"
         },
         "files": []
-    }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
