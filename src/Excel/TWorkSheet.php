@@ -106,6 +106,12 @@ trait TWorkSheet{
     private $columnValidations = [];
 
     /**
+     * 必填字段列表
+     * @var array 格式：['field_name1', 'field_name2', ...] 或 在 titleConfig 中通过 'required_fields' 配置
+     */
+    private $requiredFields = [];
+
+    /**
      * @param $data
      * @return $this
      */
@@ -165,6 +171,10 @@ trait TWorkSheet{
             if (isset($titleConfig['mergeColumns'])) {
                 $this->mergeColumns = $titleConfig['mergeColumns'];
             }
+            // 新增：读取必填字段配置
+            if (isset($titleConfig['required_fields'])) {
+                $this->requiredFields = $titleConfig['required_fields'];
+            }
         }else{
             /**
              *  $titleConfig = [
@@ -196,7 +206,8 @@ trait TWorkSheet{
             $this->_col,
             $this->_row,
             $this->titleHeight ?? null,
-            $this->titleWidth ?? null
+            $this->titleWidth ?? null,
+            $this->requiredFields
         );
         $this->_col = $result['col'];
         $this->_row = $result['row'];
@@ -442,5 +453,22 @@ trait TWorkSheet{
         }
     }
 
+    /**
+     * 设置必填字段
+     * @param array $fields 必填字段列表，格式：['field_name1', 'field_name2', ...]
+     * @return $this
+     */
+    public function setRequiredFields(array $fields) {
+        $this->requiredFields = $fields;
+        return $this;
+    }
+
+    /**
+     * 获取必填字段列表
+     * @return array
+     */
+    public function getRequiredFields(): array {
+        return $this->requiredFields;
+    }
 
 }

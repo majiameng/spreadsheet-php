@@ -12,11 +12,14 @@ $filename = $sheetName = "export_demo";
  * excel表头
  */
 $title = [
-    '序号'=>'_id',
-    'ID'=>'goods_id',
-    '状态'=>'status',
+    'title_row' => 1,
+    'title' => [
+        '序号'=>'_id',
+        'ID'=>'goods_id',
+        '状态'=>'status',
+    ],
+    'required_fields' => ['goods_id', 'status'], // 必填字段列表
 ];
-
 
 // excel字段验证
 $columnValidation = [
