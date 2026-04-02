@@ -20,6 +20,11 @@ trait SpreadSheet{
      */
     private $sheetName;
     /**
+     * sheet 数量
+     * @var
+     */
+    private $sheetCount;
+    /**
      * 定义所有字段
      * @var array
      */
@@ -115,6 +120,16 @@ trait SpreadSheet{
     }
 
     /**
+     * @param $titleFieldsRow
+     * @return $this
+     */
+    public function titleFieldsRow($titleFieldsRow)
+    {
+        $this->titleFieldsRow = $titleFieldsRow;
+        return $this;
+    }
+
+    /**
      * getExcelData
      * @return array
      * @throws Exception
@@ -133,7 +148,7 @@ trait SpreadSheet{
             $data = [];
             foreach ($this->cellName as $column){
                 $cell = $this->workSheet->getCell($column.$row);
-                $value = trim($cell->getFormattedValue());
+                $value = $this->ttrim($cell->getFormattedValue());
                 if(isset($this->title_fields[$column])){
                     $data[$this->title_fields[$column]] = $value;
                     if(!empty($value)) $rowFlog = true;//有内容
@@ -152,7 +167,7 @@ trait SpreadSheet{
             list($column, $row) = Coordinate::coordinateFromString($drawing->getCoordinates());
             $imageFilename = "/{$imageFilename_prefix}-" . $drawing->getCoordinates();
             $image_suffix = $this->saveImage($drawing, $imageFilename);
-            $image_name = ltrim($this->relative_path, '/') . "{$imageFilename}.{$image_suffix}";
+            $image_name = lttrim($this->relative_path, '/') . "{$imageFilename}.{$image_suffix}";
             if(isset($this->title_fields[$column])) {
                 $result[$row-($this->titleFieldsRow+1)][$this->title_fields[$column]] = $image_name;
             }
@@ -183,7 +198,7 @@ trait SpreadSheet{
         $titleDataArr = [];
 
         foreach ($this->cellName as $column){
-            $value = trim($this->workSheet->getCell($column.$row)->getValue());
+            $value = $this->ttrim($this->workSheet->getCell($column.$row)->getValue());
             // 规范化表头：移除前导星号（半角/全角）与多余空白
             $norm = $this->normalizeHeaderName($value);
             if(!empty($norm)){
@@ -209,12 +224,12 @@ trait SpreadSheet{
      * @return mixed|string
      */
     private function normalizeHeaderName($name){
-        $name = is_string($name) ? trim($name) : $name;
+        $name = is_string($name) ? $this->ttrim($name) : $name;
         if(!is_string($name)) return $name;
         // 移除一个或多个半角/全角星号以及紧随的空格
         $name = preg_replace('/^[\x{002A}\x{FF0A}]+\s*/u', '', $name);
         // 再次trim以防有残余空白
-        return trim($name);
+        return $this->ttrim($name);
     }
 
     /**
@@ -261,5 +276,18 @@ trait SpreadSheet{
         }
 
         return $realExtension;
+    }
+
+    /**
+     * @param $string
+     * @return string
+     */
+    private function ttrim($string)
+    {
+        if($string) {
+            return trim($string);
+        }else{
+            return '';
+        }
     }
 }
