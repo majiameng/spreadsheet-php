@@ -167,7 +167,7 @@ trait SpreadSheet{
             list($column, $row) = Coordinate::coordinateFromString($drawing->getCoordinates());
             $imageFilename = "/{$imageFilename_prefix}-" . $drawing->getCoordinates();
             $image_suffix = $this->saveImage($drawing, $imageFilename);
-            $image_name = lttrim($this->relative_path, '/') . "{$imageFilename}.{$image_suffix}";
+            $image_name = ltrim($this->relative_path, '/') . "{$imageFilename}.{$image_suffix}";
             if(isset($this->title_fields[$column])) {
                 $result[$row-($this->titleFieldsRow+1)][$this->title_fields[$column]] = $image_name;
             }
