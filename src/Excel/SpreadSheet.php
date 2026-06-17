@@ -186,6 +186,23 @@ trait SpreadSheet{
     }
 
     /**
+     * 获取表头行内容（不设置 title、不遍历数据行）
+     * @return array
+     */
+    public function getHeaderRow(){
+        $row = $this->titleFieldsRow;
+        $headers = [];
+        foreach ($this->cellName as $column){
+            $value = $this->ttrim($this->workSheet->getCell($column.$row)->getValue());
+            $norm = $this->normalizeHeaderName($value);
+            if(!empty($norm)){
+                $headers[$column.$row] = $norm;
+            }
+        }
+        return $headers;
+    }
+
+    /**
      * getTitleFields
      * @return SpreadSheet
      * @author: Tinymeng <666@majiameng.com>
